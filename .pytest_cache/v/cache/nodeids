@@ -1,0 +1,9 @@
+[
+  "tests/test_pyppyn.py::test_non_existing_config",
+  "tests/test_pyppyn.py::test_read_cfg_file",
+  "tests/test_pyppyn.py::test_load_cfg_file",
+  "tests/test_pyppyn.py::test_install_packages",
+  "tests/test_pyppyn.py::test_process_config",
+  "tests/test_pyppyn.py::test_install_and_import",
+  "tests/test_pyppyn.py::test_package_to_module"
+]

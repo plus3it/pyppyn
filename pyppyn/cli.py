@@ -6,24 +6,49 @@ import sys
 
 import click
 
-from pyppyn import ConfigRep
+import pyppyn
 
 click.disable_unicode_literals_warning = True
 
 @click.command(context_settings=dict(
     ignore_unknown_options=True,
 ))
-#@click.version_option(version=pyppyn.__version__)
-@click.option('-p', '--process-setup', 'process-setup', default=None,
-              help=(
-                  'Process the setup '))
+@click.version_option(version=pyppyn.__version__)
+@click.option('--setup-file', '-f', 'setup_file', default='setup.cfg',
+              help='Name of the setup file to process.')
+@click.option('--platform', '-p', 'platform', default=None,
+              help='Defaults to the current machine, use this option \
+              to override (e.g., Windows or Linux).')
+@click.option('--verbose', '-v', 'verbose', is_flag=True,
+              help='Displays extra information about processing.')
+@click.option('--auto-load', '-a', 'auto_load', is_flag=True,
+              help='Install, if necessary, and import all required \
+              packages.')
+@click.option('--display', '-d', 'display', is_flag=True,
+              help='Display package information but do not install or \
+              import packages.')
 
-def main(extra_arguments=None, **kwargs):
-    """Entry point for pyppyn cli."""
-    p = ConfigRep(setup_file="test.cfg")
-    print("Setup file",p.setup_file)
-    print("OS",p.platform)
-    p.read_setup()
-    p.process_setup()
+def main(**kwargs):
+    """Entry point for Pyppyn CLI."""
 
-    sys.exit()
+    print("Pyppyn CLI,", pyppyn.__version__)
+
+    # Remove unused options
+    empty_keys = [k for k,v in kwargs.items() if not v]
+    for k in empty_keys:
+        del kwargs[k]
+
+    exit_val = 0
+
+    # Create an instance
+    p = pyppyn.ConfigRep(**kwargs)
+
+    if kwargs.get('display',False):
+        if not (p.read_config() and p.load_config()):
+            exit_val = 1
+
+    elif kwargs.get('auto_load',False):
+        if not p.process_config():
+            exit_val = 1
+
+    sys.exit(exit_val)
