@@ -72,6 +72,7 @@ From Python
 This is a sample usage of Pyppyn from a Python script.
 
 .. code-block:: python
+
     import pyppyn
 
     # Create an instance
