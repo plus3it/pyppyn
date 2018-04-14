@@ -36,19 +36,7 @@ from distlib import database
 from setuptools import config
 from distutils import errors
 
-def _extract_version(package_name):
-    try:
-        return pkg_resources.get_distribution(package_name).version
-    except pkg_resources.DistributionNotFound:
-        _conf = config.read_configuration(
-            os.path.join(
-                os.path.dirname(os.path.dirname(os.path.dirname(__file__))),
-                'setup.cfg'
-            )
-        )
-        return _conf['metadata']['version']
-
-__version__ = _extract_version('pyppyn')
+__version__ = "0.2.2"
 
 class ConfigRep(object):
     """Utility for reading setup.cfg and installing dependencies.
