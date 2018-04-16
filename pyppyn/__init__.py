@@ -36,7 +36,7 @@ from distlib import database
 from setuptools import config
 from distutils import errors
 
-__version__ = "0.2.2"
+__version__ = "0.2.3"
 
 class ConfigRep(object):
     """Utility for reading setup.cfg and installing dependencies.
@@ -67,26 +67,6 @@ class ConfigRep(object):
         this_python_reqs: A list of packages required for this
             version of python.
     """
-
-    _message_prefix = "[Pyppyn]"
-    _should_load = 0
-    _did_load = 0
-
-    def __init__(self, *args, **kwargs):
-        """Instantiation"""
-
-        # Initial values
-        self.setup_file = kwargs.get('setup_file',"setup.cfg")
-        self.platform = kwargs.get('platform',platform.system()).lower()
-        self.verbose = kwargs.get('verbose',False)
-
-        # Verbose function
-        self.verboseprint = lambda *a: print(ConfigRep._message_prefix, *a) if self.verbose else lambda *a, **k: None
-
-        # Verbose output
-        self.verboseprint("Verbose mode")
-        self.verboseprint("Platform:",self.platform)
-        self.verboseprint("Setup file:",self.setup_file)
 
     @classmethod
     def package_to_module(cls, package):
@@ -156,6 +136,27 @@ class ConfigRep(object):
 
         return module
 
+    _message_prefix = "[Pyppyn]"
+    _should_load = 0
+    _did_load = 0
+    _state = "INIT" # Valid values are INIT, READ, LOAD, and INSTALLED
+
+    def __init__(self, *args, **kwargs):
+        """Instantiation"""
+
+        # Initial values
+        self.setup_file = kwargs.get('setup_file',"setup.cfg")
+        self.platform = kwargs.get('platform',platform.system()).lower()
+        self.verbose = kwargs.get('verbose',False)
+
+        # Verbose function
+        self.verboseprint = lambda *a: print(ConfigRep._message_prefix, *a) if self.verbose else lambda *a, **k: None
+
+        # Verbose output
+        self.verboseprint("Verbose mode")
+        self.verboseprint("Platform:",self.platform)
+        self.verboseprint("Setup file:",self.setup_file)
+
     def process_config(self):
         """Convenience method to perform all steps with one call."""
         return self.read_config() and \
@@ -166,9 +167,14 @@ class ConfigRep(object):
         """Reads the config file given through constructor."""
         self.verboseprint("Reading config file:",self.setup_file)
         self.config_dict = config.read_configuration(self.setup_file)
+        self._state = "READ"
         return self.config_dict is not None
 
     def load_config(self):
+        # Check that config has been read
+        if self._state != "READ":
+            self.read_config()
+
         """Loads the config file into data structures."""
         self.python_version = sys.version_info[0] + (sys.version_info[1]/10)
         self.app_version = str(self.config_dict["metadata"]["version"]).lower()
@@ -230,14 +236,27 @@ class ConfigRep(object):
 
         self._should_load = len(self.base_reqs) + len(self.this_os_reqs) + len(self.this_python_reqs)
 
+        self._state = "LOAD"
+
         return self._should_load > 0
 
     def install_packages(self):
+        if self._state != "LOAD":
+            self.load_config()
+
         """Installs all needed packages from the config file."""
         for package in self.this_os_reqs + self.this_python_reqs + self.base_reqs:
+            self.verboseprint("Installing package:", package)
             module = ConfigRep.install_and_import(package)
-            self.verboseprint("Installed:", package)
-            self.verboseprint("Imported:", module)
+            self.verboseprint("Imported module:", module)
             self._did_load += 1
 
+        self._state = "INSTALLED"
+
         return self._did_load == self._should_load
+
+    def get_required(self):
+        if self._state != "LOAD" and self._state != "INSTALLED":
+            self.load_config()
+
+        return self.base_reqs + self.this_os_reqs + self.this_python_reqs
