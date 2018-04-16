@@ -39,10 +39,14 @@ def test_process_config(configrep):
     """ Tests installing the indicated packages. """
     assert configrep.process_config()
 
+def test_get_required(configrep):
+    """ Tests getting list of requirements. """
+    assert set(configrep.get_required()) == set(['backoff', 'click', 'six', 'pyyaml']) 
+
 def test_install_and_import():
     """ Tests the class method. """
     assert ConfigRep.install_and_import("pyyaml") == "yaml"
 
 def test_package_to_module():
     """ Tests the class method. """
-    assert ConfigRep.package_to_module("pyyaml") == "yaml"
+    assert ConfigRep.package_to_module("pyyaml") == "yaml"    

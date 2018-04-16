@@ -45,7 +45,7 @@ use this command. This allows you to install dependencies without installing the
 .. code-block:: bash
 
     $ pyppyn --setup-file tests/test.cfg --platform linux -v -a
-    Pyppyn CLI, 0.2.1
+    Pyppyn CLI, 0.2.3
     [Pyppyn] Verbose mode
     [Pyppyn] Platform: linux
     [Pyppyn] Setup file: tests/test.cfg
@@ -81,7 +81,7 @@ This is a sample usage of Pyppyn from a Python script.
     # Load config, install dependencies and import a module from the package
     p.process_config()
 
-    print("Package requires:", p.this_os_reqs + p.this_python_reqs + p.base_reqs)
+    print("Package requires:", p.get_required())
 
 Contribute
 ==========
