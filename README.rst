@@ -11,7 +11,7 @@ Pyppyn
 .. image:: https://img.shields.io/pypi/pyversions/pyppyn.svg
     :target: https://pypi.python.org/pypi/pyppyn
     :alt: Python Version Compatibility
-.. image:: https://img.shields.io/pypi/v/pyppyn.svg?label=version
+.. image:: https://img.shields.io/pypi/v/pyppyn.svg
     :target: https://pypi.python.org/pypi/pyppyn
     :alt: Version
 
