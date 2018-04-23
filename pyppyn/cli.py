@@ -14,8 +14,8 @@ click.disable_unicode_literals_warning = True
     ignore_unknown_options=True,
 ))
 @click.version_option(version=pyppyn.__version__)
-@click.option('--setup-file', '-f', 'setup_file', default='setup.cfg',
-              help='Name of the setup file to process.')
+@click.option('--setup-path', '-s', 'setup_path', default='.',
+              help='Name of the path containing setup.py.')
 @click.option('--platform', '-p', 'platform', default=None,
               help='Defaults to the current machine, use this option \
               to override (e.g., Windows or Linux).')

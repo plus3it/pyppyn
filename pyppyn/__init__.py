@@ -28,15 +28,17 @@ Todo:
 """
 import platform
 import sys
-import pkg_resources
 import os
 import importlib
+import shutil
+import random
+import zipfile
+import glob
+import subprocess
 
 from distlib import database
-from setuptools import config
-from distutils import errors
 
-__version__ = "0.2.3"
+__version__ = "0.3.0"
 
 class ConfigRep(object):
     """Utility for reading setup.cfg and installing dependencies.
@@ -48,24 +50,27 @@ class ConfigRep(object):
     access to this information.
 
     Attributes:
-        setup_file: A str of the path of the file to process.
+        setup_path: A str of the path to process (where setup.py and
+            setup.cfg are located).
         platform: A str of the platform. This is automatically
             determined or can be overriden.
         verbose: A bool of whether to display extra messages.
-        config_dict: A dict representing the values in the config
+        config: A dict representing the values in the config
             file.
         python_version: A float with the major and minor versions of
             the currently running python.
         app_version: A str of the version represented by the config
             file.
-        this_os_reqs: A list of packages required for this os/env.
+        os_reqs: A list of packages required for this os/env.
         other_reqs: A list of packages that are not required.
             Included for debug so that it is possible to see where
             everything went.
         base_reqs: A list of non-specific requirements that are also
             needed.
-        this_python_reqs: A list of packages required for this
+        python_reqs: A list of packages required for this
             version of python.
+        unparsed_reqs: A list of packages with markers that could
+            not be parsed.
     """
 
     @classmethod
@@ -140,12 +145,13 @@ class ConfigRep(object):
     _should_load = 0
     _did_load = 0
     _state = "INIT" # Valid values are INIT, READ, LOAD, and INSTALLED
+    _wheel_temp_dir = "temp"
 
     def __init__(self, *args, **kwargs):
         """Instantiation"""
 
         # Initial values
-        self.setup_file = kwargs.get('setup_file',"setup.cfg")
+        self.setup_path = kwargs.get('setup_path',".")
         self.platform = kwargs.get('platform',platform.system()).lower()
         self.verbose = kwargs.get('verbose',False)
 
@@ -155,7 +161,7 @@ class ConfigRep(object):
         # Verbose output
         self.verboseprint("Verbose mode")
         self.verboseprint("Platform:",self.platform)
-        self.verboseprint("Setup file:",self.setup_file)
+        self.verboseprint("Setup path:",self.setup_path)
 
     def process_config(self):
         """Convenience method to perform all steps with one call."""
@@ -163,12 +169,178 @@ class ConfigRep(object):
             self.load_config() and \
             self.install_packages()
 
+    def _create_wheel(self):
+        self.verboseprint("Building wheel from",self.setup_path)
+        # if build and/or dist directories already exist, rename
+        self._rename_end = '_' + str(random.randint(10000,99999))
+
+        if os.path.isdir(os.path.join(self.setup_path, 'build')):
+            os.rename(os.path.join(self.setup_path, 'build'), os.path.join(self.setup_path, 'build' + self._rename_end))
+        if os.path.isdir(os.path.join(self.setup_path, 'dist')):
+            os.rename(os.path.join(self.setup_path, 'dist'), os.path.join(self.setup_path, 'dist' + self._rename_end))
+
+        # actual wheel creation
+        commands = ['python', 'setup.py', 'bdist_wheel', '--universal']
+        sub_return = subprocess.run(commands, check=True)
+        if sub_return.returncode != 0:
+            self.verboseprint("Wheel build failed")
+            raise ChildProcessError
+
+    def _extract_wheel(self):
+        self.verboseprint("Extracting wheel (unzipping)")
+        for wheel_file in glob.glob(os.path.join('.', '*whl')):
+            self.verboseprint("Wheel archive found:",wheel_file)
+
+        self.verboseprint("Unzipping:",wheel_file)
+        zip_ref = zipfile.ZipFile(wheel_file, 'r')
+        zip_ref.extractall(self._wheel_temp_dir)
+        zip_ref.close()
+
+    def _wheel_directories(self):
+        # look at directories wheel created
+        self.verboseprint("Going through wheel directories")
+        self.config = {}
+        self.config["packages"] = []
+        for created_file in glob.glob(os.path.join('.', '*')):
+            #self.verboseprint("Wheel artifact:",created_file)
+            if not created_file.endswith('.dist-info') and os.path.isdir(created_file):
+                if created_file.startswith('.' + os.sep):
+                    created_file = created_file[2:]
+                self.config["packages"].append(created_file)
+            elif created_file.endswith('.dist-info'):
+                self.config["metadata_dir"] = created_file
+
+    def _wheel_top_level(self):
+        # top level
+        self.verboseprint("Looking at wheel top level")
+        self.config["top_level"] = open("top_level.txt","r").read().strip()
+
+    def _wheel_console_scripts(self):
+        # console scripts
+        self.verboseprint("Reading names of console scripts")
+        f = open("entry_points.txt", "r")
+        self.config["console_scripts"] = []
+        console_scripts = False
+        for line in f:
+            if line.startswith('[console_scripts]'):
+                console_scripts = True
+            elif console_scripts:
+                try:
+                    parts = line.split(' = ')
+                    if len(parts) > 1:
+                        self.config["console_scripts"].append(parts[0].strip())
+                except:
+                    break
+
+    def _wheel_metadata(self):
+        # metadata
+        self.verboseprint("Reading wheel metadata")
+        bulk = open("METADATA", "U").read()
+        parts = bulk.split("\n\n")
+        if len(parts) > 1:
+            metadata = parts[0].strip()
+        else:
+            metadata = bulk
+
+        self.config["metadata"] = {}
+        for line in metadata.split("\n"):
+            parts = line.split(': ', maxsplit=1)
+            if len(parts) > 1:
+                key = parts[0].strip().lower()
+                value = parts[1].strip()
+                if self.config["metadata"].get(key) is None:
+                    self.config["metadata"][key] = [value]
+                else:
+                    self.config["metadata"][key].append(value)
+
+    def _wheel_cleanup(self):
+        # put back dist and build
+        self.verboseprint("Cleaning up wheel")
+        shutil.rmtree(os.path.join(self.setup_path, 'build'))
+        if os.path.isdir(os.path.join(self.setup_path, 'build' + self._rename_end)):
+            os.rename(os.path.join(self.setup_path, 'build' + self._rename_end), os.path.join(self.setup_path, 'build'))
+
+        shutil.rmtree(os.path.join(self.setup_path, 'dist'))
+        if os.path.isdir(os.path.join(self.setup_path, 'dist' + self._rename_end)):
+            os.rename(os.path.join(self.setup_path, 'dist' + self._rename_end), os.path.join(self.setup_path, 'dist'))
+
     def read_config(self):
-        """Reads the config file given through constructor."""
-        self.verboseprint("Reading config file:",self.setup_file)
-        self.config_dict = config.read_configuration(self.setup_file)
+        """Creates a wheel from the setup path given, and reads metadata."""
+        self.verboseprint("Reading configuration of",self.setup_path)
+
+        # check for existence of setup.py, required
+        if not os.path.isfile(os.path.join(self.setup_path, 'setup.py')):
+            self.verboseprint("setup.py not found at",self.setup_path)
+            raise FileNotFoundError
+
+        original_cwd = os.getcwd()
+
+        # create wheel
+        os.chdir(self.setup_path)
+        self._create_wheel()
+
+        os.chdir('dist')
+        self._extract_wheel()
+
+        os.chdir(self._wheel_temp_dir)
+        self._wheel_directories()
+
+        os.chdir(self.config["metadata_dir"])
+        self._wheel_top_level()
+        self._wheel_console_scripts()
+        self._wheel_metadata()
+
+        # go back to original directory
+        os.chdir(original_cwd)
+        self._wheel_cleanup()
+
+        #self.config = config.read_configuration(self.setup_path)
         self._state = "READ"
-        return self.config_dict is not None
+        return self.config is not None
+
+    def _parse_marker(self, package=None, marker=None):
+
+        marker_parts = marker.split(' ')
+        """ Plain markers have 3 parts, 1. key, 2. conditional, 3. value
+        Compound markers (not supported) have multiple markers, such as:
+        platform_system == "Windows" and python_version == "2.7"
+        https://github.com/pypa/setuptools/blob/master/pkg_resources/_vendor/packaging/markers.py
+        https://www.python.org/dev/peps/pep-0496/ """
+
+        # get rid of quotes and whitespace on markers
+        for i, m in enumerate(marker_parts):
+            marker_parts[i] = m.strip().strip('"').strip("'").strip()
+
+        if len(marker_parts) != 3:
+            self.verboseprint("Unsupported marker [", package, "]:", marker)
+            self.unparsed_reqs.append(package)
+
+        elif marker_parts[0] == 'platform_system' \
+            and marker_parts[1] == '==' \
+            and marker_parts[2].lower() == self.platform:
+            self.os_reqs.append(package)
+
+        elif marker_parts[0] == 'platform_system' \
+            and marker_parts[1] == '==' \
+            and marker_parts[2].lower() != self.platform:
+            self.other_reqs.append(package)
+
+        elif marker_parts[0] == 'python_version':
+            if marker_parts[1] == '<' and self.python_version < float(marker_parts[2]):
+                self.python_reqs.append(package)
+            elif marker_parts[1] == '>' and self.python_version > float(marker_parts[2]):
+                self.python_reqs.append(package)
+            elif marker_parts[1] == '>=' and self.python_version >= float(marker_parts[2]):
+                self.python_reqs.append(package)
+            elif marker_parts[1] == '<=' and self.python_version <= float(marker_parts[2]):
+                self.python_reqs.append(package)
+            elif marker_parts[1] == '!=' and self.python_version != float(marker_parts[2]):
+                self.python_reqs.append(package)
+            elif marker_parts[1] == '==' and self.python_version == float(marker_parts[2]):
+                self.python_reqs.append(package)
+
+        else:
+            self.unparsed_reqs.append(package)
 
     def load_config(self):
         # Check that config has been read
@@ -177,64 +349,41 @@ class ConfigRep(object):
 
         """Loads the config file into data structures."""
         self.python_version = sys.version_info[0] + (sys.version_info[1]/10)
-        self.app_version = str(self.config_dict["metadata"]["version"]).lower()
+        self.app_name = self.config["metadata"]["name"][0]
+        self.app_version = str(self.config["metadata"]["version"][0]).lower()
 
         self.verboseprint("This Python:",self.python_version)
-        self.verboseprint("Version from",self.setup_file,":",self.app_version)
+        self.verboseprint("Version from",self.setup_path,":",self.app_version)
 
         """ Parsing some (but not all) possible markers.
         Compound markers (e.g., 'platform_system == "Windows" and python_version < "2.7"') and
         conditional markers (e.g., "pywin32 >=1.0 ; sys_platform == 'win32'") are not
         supported yet. """
-        self.this_os_reqs = []      # Requirements on this os/env
-        self.other_reqs = []        # Not required on this os/env, mostly included for debug so you can see where everything went
-        self.base_reqs = []         # Across the board reqs
-        self.this_python_reqs = []  # This python version reqs
+        self.os_reqs = []       # Requirements on this os/env
+        self.other_reqs = []    # Not required on this os/env, mostly included for debug so you can see where everything went
+        self.base_reqs = []     # Across the board reqs
+        self.python_reqs = []   # This python version reqs
+        self.unparsed_reqs = [] # Couldn't figure out marker
 
-        for r in pkg_resources.parse_requirements(self.config_dict["options"]["install_requires"]):
+        for r in self.config["metadata"]["requires-dist"]:
 
-            if str(getattr(r, 'marker', 'None')) != 'None':
-                """ Plain markers have 3 parts, 1. key, 2. conditional, 3. value
-                Compound markers (not supported) will produce 3 markers,
-                1. platform_system == "Windows", 2. and, 3. python_version == "2.7"
-                https://github.com/pypa/setuptools/blob/master/pkg_resources/_vendor/packaging/markers.py
-                https://www.python.org/dev/peps/pep-0496/ """
-                for m in r.marker._markers:
-                    if str(m[0]) == 'platform_system' and str(m[1]) == '==' and str(m[2]).lower() == self.platform:
-                        self.this_os_reqs.append(r.key)
+            parts = r.lower().split('; ')
+            if len(parts) > 1:
 
-                    elif str(m[0]) == 'platform_system' and str(m[1]) == '==' and str(m[2]).lower() != self.platform:
-                        self.other_reqs.append(r.key)
-
-                    elif str(m[0]) == 'python_version':
-                        if str(m[1]) == '<' and self.python_version < float(str(m[2])):
-                            self.this_python_reqs.append(r.key)
-                        elif str(m[1]) == '>' and self.python_version > float(str(m[2])):
-                            self.this_python_reqs.append(r.key)
-                        elif str(m[1]) == '>=' and self.python_version >= float(str(m[2])):
-                            self.this_python_reqs.append(r.key)
-                        elif str(m[1]) == '<=' and self.python_version <= float(str(m[2])):
-                            self.this_python_reqs.append(r.key)
-                        elif str(m[1]) == '!=' and self.python_version != float(str(m[2])):
-                            self.this_python_reqs.append(r.key)
-                        elif str(m[1]) == '==' and self.python_version == float(str(m[2])):
-                            self.this_python_reqs.append(r.key)
-                        else:
-                            self.other_reqs.append(r.key)
-
-                    else:
-                        self.base_reqs.append(r.key) # if can't figure out the marker, add it
+                #marker present
+                self._parse_marker(package=parts[0], marker=parts[1])
 
             else:
-                self.base_reqs.append(r.key)
+                self.base_reqs.append(r.lower())
 
         self.verboseprint("Install Requires:")
         self.verboseprint("\tGenerally required:", self.base_reqs)
-        self.verboseprint("\tFor this OS:", self.this_os_reqs)
-        self.verboseprint("\tFor this Python version:", self.this_python_reqs)
+        self.verboseprint("\tFor this OS:", self.os_reqs)
+        self.verboseprint("\tFor this Python version:", self.python_reqs)
+        self.verboseprint("\tUnparsed markers:", self.unparsed_reqs)
         self.verboseprint("\tOthers listed by not required (e.g., wrong platform):", self.other_reqs)
 
-        self._should_load = len(self.base_reqs) + len(self.this_os_reqs) + len(self.this_python_reqs)
+        self._should_load = len(self.base_reqs) + len(self.os_reqs) + len(self.python_reqs) + len(self.unparsed_reqs)
 
         self._state = "LOAD"
 
@@ -245,7 +394,7 @@ class ConfigRep(object):
             self.load_config()
 
         """Installs all needed packages from the config file."""
-        for package in self.this_os_reqs + self.this_python_reqs + self.base_reqs:
+        for package in self.os_reqs + self.python_reqs + self.base_reqs + self.unparsed_reqs:
             self.verboseprint("Installing package:", package)
             module = ConfigRep.install_and_import(package)
             self.verboseprint("Imported module:", module)
@@ -259,4 +408,4 @@ class ConfigRep(object):
         if self._state != "LOAD" and self._state != "INSTALLED":
             self.load_config()
 
-        return self.base_reqs + self.this_os_reqs + self.this_python_reqs
+        return self.base_reqs + self.os_reqs + self.python_reqs + self.unparsed_reqs
