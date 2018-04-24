@@ -35,7 +35,7 @@ import subprocess
 
 from distlib import database
 
-__version__ = "0.3.0"
+__version__ = "0.3.1"
 
 class ConfigRep(object):
     """Utility for reading setup.cfg and installing dependencies.
