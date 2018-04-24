@@ -22,9 +22,6 @@ Example:
     Help using the Pyppyn CLI can be found by typing the following::
 
         $ pyppyn --help
-
-Todo:
-    * Improve support for setup.py (support now focuses on setup.cfg)
 """
 import platform
 import sys
@@ -38,7 +35,7 @@ import subprocess
 
 from distlib import database
 
-__version__ = "0.3.0"
+__version__ = "0.3.1"
 
 class ConfigRep(object):
     """Utility for reading setup.cfg and installing dependencies.
@@ -141,14 +138,19 @@ class ConfigRep(object):
 
         return module
 
-    _message_prefix = "[Pyppyn]"
-    _should_load = 0
-    _did_load = 0
-    _state = "INIT" # Valid values are INIT, READ, LOAD, and INSTALLED
-    _wheel_temp_dir = "temp"
+    VERB_MESSAGE_PREFIX = "[Pyppyn]"
+    WHEEL_TEMP_DIR = "temp"
+    STATE_INIT = "INIT"
+    STATE_READ = "READ"
+    STATE_LOAD = "LOAD"
+    STATE_INSTALLED = "INSTALLED"
 
     def __init__(self, *args, **kwargs):
         """Instantiation"""
+
+        self._should_load = 0
+        self._did_load = 0
+        self._state = ConfigRep.STATE_INIT
 
         # Initial values
         self.setup_path = kwargs.get('setup_path',".")
@@ -156,7 +158,7 @@ class ConfigRep(object):
         self.verbose = kwargs.get('verbose',False)
 
         # Verbose function
-        self.verboseprint = lambda *a: print(ConfigRep._message_prefix, *a) if self.verbose else lambda *a, **k: None
+        self.verboseprint = lambda *a: print(ConfigRep.VERB_MESSAGE_PREFIX, *a) if self.verbose else lambda *a, **k: None
 
         # Verbose output
         self.verboseprint("Verbose mode")
@@ -193,7 +195,7 @@ class ConfigRep(object):
 
         self.verboseprint("Unzipping:",wheel_file)
         zip_ref = zipfile.ZipFile(wheel_file, 'r')
-        zip_ref.extractall(self._wheel_temp_dir)
+        zip_ref.extractall(ConfigRep.WHEEL_TEMP_DIR)
         zip_ref.close()
 
     def _wheel_directories(self):
@@ -282,7 +284,7 @@ class ConfigRep(object):
         os.chdir('dist')
         self._extract_wheel()
 
-        os.chdir(self._wheel_temp_dir)
+        os.chdir(ConfigRep.WHEEL_TEMP_DIR)
         self._wheel_directories()
 
         os.chdir(self.config["metadata_dir"])
@@ -295,7 +297,7 @@ class ConfigRep(object):
         self._wheel_cleanup()
 
         #self.config = config.read_configuration(self.setup_path)
-        self._state = "READ"
+        self._state = ConfigRep.STATE_READ
         return self.config is not None
 
     def _parse_marker(self, package=None, marker=None):
@@ -344,7 +346,7 @@ class ConfigRep(object):
 
     def load_config(self):
         # Check that config has been read
-        if self._state != "READ":
+        if self._state != ConfigRep.STATE_READ:
             self.read_config()
 
         """Loads the config file into data structures."""
@@ -385,12 +387,12 @@ class ConfigRep(object):
 
         self._should_load = len(self.base_reqs) + len(self.os_reqs) + len(self.python_reqs) + len(self.unparsed_reqs)
 
-        self._state = "LOAD"
+        self._state = ConfigRep.STATE_LOAD
 
         return self._should_load > 0
 
     def install_packages(self):
-        if self._state != "LOAD":
+        if self._state != ConfigRep.STATE_LOAD:
             self.load_config()
 
         """Installs all needed packages from the config file."""
@@ -400,12 +402,54 @@ class ConfigRep(object):
             self.verboseprint("Imported module:", module)
             self._did_load += 1
 
-        self._state = "INSTALLED"
+        self._state = ConfigRep.STATE_INSTALLED
 
         return self._did_load == self._should_load
 
     def get_required(self):
-        if self._state != "LOAD" and self._state != "INSTALLED":
+        if self._state != ConfigRep.STATE_LOAD and self._state != ConfigRep.STATE_INSTALLED:
             self.load_config()
 
         return self.base_reqs + self.os_reqs + self.python_reqs + self.unparsed_reqs
+
+    def get_config_attr(self, key, element=0):
+        """Convenience method to return a value associated with a
+        key in the configuration. If not found directly under the
+        configuration, a value from the metadata in the configuration
+        is checked. In Pyppyn, all configuration attributes are
+        lists. This method only returns the first value in the list,
+        and de-listifies the value.
+
+        Args:
+            key: A str of the key for which you want a value from
+                the configuration data.
+            element: An integer representing the index of the list
+                item to return [0].
+
+        Returns:
+            A str of the value associated with the attr OR None if
+            it is not present.
+        """
+        if self._state != ConfigRep.STATE_LOAD and self._state != ConfigRep.STATE_INSTALLED:
+            self.load_config()
+
+        return self.config.get(key,self.config['metadata'].get(key,[None]))[element]
+
+    def get_config_list(self, key):
+        """Convenience method to return a list associated with a
+        key in the configuration. In Pyppyn, all configuration
+        attributes are lists. If no list is found in the main
+        configuration, the metadata in the configuration is checked.
+
+        Args:
+            key: A str of the key for which you want a value from
+                the configuration data.
+
+        Returns:
+            A str of the value associated with the attr OR None if
+            it is not present.
+        """
+        if self._state != ConfigRep.STATE_LOAD and self._state != ConfigRep.STATE_INSTALLED:
+            self.load_config()
+
+        return self.config.get(key,self.config['metadata'].get(key,[None]))

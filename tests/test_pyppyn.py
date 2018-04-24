@@ -53,4 +53,12 @@ def test_install_and_import():
 
 def test_package_to_module():
     """ Tests the class method. """
-    assert ConfigRep.package_to_module("pyyaml") == "yaml"    
+    assert ConfigRep.package_to_module("pyyaml") == "yaml"   
+
+def test_get_config_attr(configrep):
+    """ Tests getting an attribute from the configuration """
+    assert configrep.get_config_attr('packages') == "minipippy"
+
+def test_get_config_list(configrep):
+    """ Tests getting a list from the configuration """
+    assert set(configrep.get_config_list('platform')) == set(['Linux', 'Windows'])
