@@ -11,14 +11,14 @@ Pyppyn
 .. image:: https://img.shields.io/pypi/pyversions/pyppyn.svg
     :target: https://pypi.python.org/pypi/pyppyn
     :alt: Python Version Compatibility
-.. image:: https://img.shields.io/pypi/v/pyppyn.svg?label=version
+.. image:: https://img.shields.io/pypi/v/pyppyn.svg
     :target: https://pypi.python.org/pypi/pyppyn
     :alt: Version
 
 Pyppyn helps you dynamically read setup configurations and load dependencies.
 
 Since ``pip`` is excellent at reading setup configurations and loading dependencies, why Pyppyn?
-If you need programmatic access to dependency information, for example, in dynamically creating standalone 
+If you need programmatic access to dependency information, for example, in dynamically creating standalone
 applications using `PyInstaller <http://www.pyinstaller.org>`_ Pyppyn can help you out.
 
 Pyppyn can be used in scripts or using the CLI. Either way, it can be installed easily.
@@ -39,32 +39,45 @@ CLI
 Example
 =======
 
-To parse the included test ``setup.cfg`` file and install the required dependencies, you can
-use this command. This allows you to install dependencies without installing the package associated with a given ``setup.cfg`` file.
+To parse the included test mini Python package (tests/minipippy),
+with a setup.cfg and setup.py file, and install the required
+dependencies, you can use this command. This allows you to install
+dependencies without installing the package.
 
 .. code-block:: bash
 
-    $ pyppyn --setup-file tests/test.cfg --platform linux -v -a
-    Pyppyn CLI, 0.2.3
+    $ pyppyn --setup-path tests/minipippy --platform linux -v -a
+    Pyppyn CLI, 0.3.0
     [Pyppyn] Verbose mode
     [Pyppyn] Platform: linux
-    [Pyppyn] Setup file: tests/test.cfg
-    [Pyppyn] Reading config file: tests/test.cfg
+    [Pyppyn] Setup path: tests/minipippy
+    [Pyppyn] Reading configuration of tests/minipippy
+    [Pyppyn] Building wheel from tests/minipippy
+    [...]
+    [Pyppyn] Extracting wheel (unzipping)
+    [Pyppyn] Wheel archive found: ./minipippy-4.8.2-py2.py3-none-any.whl
+    [Pyppyn] Unzipping: ./minipippy-4.8.2-py2.py3-none-any.whl
+    [Pyppyn] Going through wheel directories
+    [Pyppyn] Looking at wheel top level
+    [Pyppyn] Reading names of console scripts
+    [Pyppyn] Reading wheel metadata
+    [Pyppyn] Cleaning up wheel
     [Pyppyn] This Python: 3.6
-    [Pyppyn] Version from tests/test.cfg : 0.9.4.dev
+    [Pyppyn] Version from tests/minipippy : 4.8.2
+    [Pyppyn] Unsupported marker [ six ]: platform_system == "linux" and python_version > "3.3"
     [Pyppyn] Install Requires:
-    [Pyppyn] 	Generally required: ['backoff', 'click', 'six', 'pyyaml']
+    [Pyppyn] 	Generally required: ['backoff', 'click', 'pyyaml']
     [Pyppyn] 	For this OS: []
     [Pyppyn] 	For this Python version: []
-    [Pyppyn] 	Others listed by not required (e.g., wrong platform): ['defusedxml', 'futures', 'pypiwin32', 'wheel']
-    [Pyppyn] Installed: backoff
-    [Pyppyn] Imported: backoff
-    [Pyppyn] Installed: click
-    [Pyppyn] Imported: click
-    [Pyppyn] Installed: six
-    [Pyppyn] Imported: six
-    [Pyppyn] Installed: pyyaml
-    [Pyppyn] Imported: yaml
+    [Pyppyn] 	Unparsed markers: ['six']
+    [Pyppyn] 	Others listed by not required (e.g., wrong platform): ['defusedxml', 'pypiwin32']
+    [Pyppyn] Installing package: backoff
+    [Pyppyn] Imported module: backoff
+    [Pyppyn] Installing package: click
+    [Pyppyn] Imported module: click
+    [Pyppyn] Installing package: pyyaml
+    [Pyppyn] Imported module: yaml
+
 
 From Python
 ===========
@@ -76,7 +89,7 @@ This is a sample usage of Pyppyn from a Python script.
     import pyppyn
 
     # Create an instance
-    p = pyppyn.ConfigRep(setup_file="tests/test.cfg",verbose=True)
+    p = pyppyn.ConfigRep(setup_path="tests/minipippy",verbose=True)
 
     # Load config, install dependencies and import a module from the package
     p.process_config()

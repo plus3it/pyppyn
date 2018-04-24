@@ -1,24 +1,28 @@
 # test_pyppyn.py
 
 import pytest
-import distutils
 
 from pyppyn import ConfigRep
 
 @pytest.fixture
 def bad_configrep():
     """Returns a ConfigRep instance with a bad config file"""
-    return ConfigRep(setup_file="doesnotexistfile")
+    return ConfigRep(setup_path="pathdoesnotexist")
 
 def test_non_existing_config(bad_configrep):
     """ Gives an error when no/invalid setup file is provided. """
-    with pytest.raises(distutils.errors.DistutilsFileError):
+    with pytest.raises(FileNotFoundError):
         bad_configrep.read_config()
 
 @pytest.fixture
 def configrep():
     """Returns a ConfigRep instance using the included test.cfg file"""
-    return ConfigRep(setup_file="tests/test.cfg",verbose=True)
+    return ConfigRep(setup_path="tests/minipippy",platform="linux",verbose=True)
+
+def test_app_name_version(configrep):
+    """ Tests reading the config file. """
+    configrep.load_config()
+    assert configrep.app_name == "minipippy" and configrep.app_version == "4.8.2"
 
 def test_read_cfg_file(configrep):
     """ Tests reading the config file. """
