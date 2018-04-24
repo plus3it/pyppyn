@@ -1,6 +1,11 @@
 CHANGE LOG
 ==========
 
+0.3.1 - 2018.04.24
+------------------
+* [ENHANCEMENT] Add convenience methods for accessing configuration data.
+* [BUG FIX] Improve state handling.
+
 0.3.0 - 2018.04.23
 ------------------
 * [ENHANCEMENT] Now provides support for packages with setup.py and/or setup.cfg configuations.
