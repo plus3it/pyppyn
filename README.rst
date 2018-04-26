@@ -18,10 +18,12 @@ Pyppyn
 Pyppyn helps you dynamically read setup configurations and load dependencies.
 
 Since ``pip`` is excellent at reading setup configurations and loading dependencies, why Pyppyn?
-If you need programmatic access to dependency information, for example, in dynamically creating standalone
-applications using `PyInstaller <http://www.pyinstaller.org>`_ Pyppyn can help you out.
+If you need programmatic access to dependency information, for
+example, in dynamically creating standalone
+applications using `GravityBee <https://github.com/YakDriver/gravitybee>`_ and `PyInstaller <http://www.pyinstaller.org>`_, Pyppyn can help you out.
 
-Pyppyn can be used in scripts or using the CLI. Either way, it can be installed easily.
+Pyppyn can be used in scripts or using the CLI. Either way, it can be
+installed easily.
 
 .. code-block:: bash
 
@@ -47,7 +49,7 @@ dependencies without installing the package.
 .. code-block:: bash
 
     $ pyppyn --setup-path tests/minipippy --platform linux -v -a
-    Pyppyn CLI, 0.3.0
+    Pyppyn CLI, 0.3.2
     [Pyppyn] Verbose mode
     [Pyppyn] Platform: linux
     [Pyppyn] Setup path: tests/minipippy

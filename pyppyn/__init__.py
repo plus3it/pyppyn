@@ -28,14 +28,14 @@ import sys
 import os
 import importlib
 import shutil
-import random
+import uuid
 import zipfile
 import glob
 import subprocess
 
 from distlib import database
 
-__version__ = "0.3.1"
+__version__ = "0.3.2"
 
 class ConfigRep(object):
     """Utility for reading setup.cfg and installing dependencies.
@@ -174,7 +174,7 @@ class ConfigRep(object):
     def _create_wheel(self):
         self.verboseprint("Building wheel from",self.setup_path)
         # if build and/or dist directories already exist, rename
-        self._rename_end = '_' + str(random.randint(10000,99999))
+        self._rename_end = '_' + uuid.uuid1().hex[:16]
 
         if os.path.isdir(os.path.join(self.setup_path, 'build')):
             os.rename(os.path.join(self.setup_path, 'build'), os.path.join(self.setup_path, 'build' + self._rename_end))
