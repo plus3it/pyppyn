@@ -1,6 +1,12 @@
 CHANGE LOG
 ==========
 
+0.3.3 - 2018.05.07
+------------------
+* [ENHANCEMENT] Integrate with `Satsuki <https://github.com/YakDriver/satsuki>`_ to simplify the release process.
+* [ENHANCEMENT] Integrate with `GravityBee <https://github.com/YakDriver/gravitybee>`_ to create standalone
+  executables for platforms.
+
 0.3.2 - 2018.04.26
 ------------------
 * [BUG FIX] Minor tweak to way that work directories are created to
