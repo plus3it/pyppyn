@@ -113,6 +113,47 @@ class ConfigRep(object):
 
         return module
 
+
+    @classmethod
+    def install_package(cls, package):
+        """Installs a package.
+
+        Args:
+            package: A str of the package to install.
+
+        Returns:
+            True on success.
+        """
+        try:
+            from pip import main as pipmain
+
+        except:
+            from pip._internal import main as pipmain
+
+        pipmain(['install', package])
+
+        return True        
+
+
+    @classmethod
+    def import_module(cls, module):
+        """Imports a module.
+
+        Args:
+            module: A str of the module to import.
+
+        Returns:
+            True on success.
+        """
+        try:
+            globals()[module] = importlib.import_module(module)
+
+        except (ImportError):
+            return False
+
+        return True
+
+
     @classmethod
     def install_and_import(cls, package):
         """Installs a package and imports the associated module.
@@ -126,15 +167,12 @@ class ConfigRep(object):
         """
         try:
             module = cls.package_to_module(package)
-            importlib.import_module(module)
+            cls.import_module(module)
 
         except (ImportError):
-            import pip
-            pip.main(['install', package])
+            cls.install_package(package)
             module = cls.package_to_module(package)
-
-        finally:
-            globals()[module] = importlib.import_module(module)
+            cls.import_module(module)
 
         return module
 
