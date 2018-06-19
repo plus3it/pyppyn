@@ -17,7 +17,7 @@ before_deploy:
     if [ "$TRAVIS_BRANCH" = "dev" ]; then
       sed -i -E "s/^(version = )(.*)/\1\2.$TRAVIS_BUILD_NUMBER/" $TRAVIS_BUILD_DIR/setup.cfg
     elif [ "$TRAVIS_BRANCH" = "master" ]; then
-      gravitybee --verbose
+      gravitybee --verbose --sha file
       export SATS_TAG=$(grep "version = " $TRAVIS_BUILD_DIR/setup.cfg | sed "s/version = //")
       export SATS_BODY="* [Pyppyn v$SATS_TAG CHANGELOG](https://github.com/YakDriver/pyppyn/blob/$SATS_TAG/CHANGELOG.rst)"
     fi
@@ -35,25 +35,12 @@ deploy:
       repo: YakDriver/pyppyn
       python: "3.6"
   - provider: script
-    script: satsuki
+    script: satsuki --verbose
     skip_cleanup: true
     on:
       branch: master
       repo: YakDriver/pyppyn
       python: "3.6"
-  #- provider: releases
-  #  name: $RELEASE_VERSION
-  #  tag_name: $RELEASE_VERSION
-  #  target_commitish: $TRAVIS_COMMIT
-  #  body: $RELEASE_BODY
-  #  draft: false
-  #  skip_cleanup: true
-  #  api_key:
-  #    secure: l4kaAXn8uUthiplq1YIUscMCu2KNfqUqgr+2OoDZNo/imscnd6puqxgHnWflXdVkL1hvYl3eGgOQ6n1CWlEO/9bMV3mg4U/Gk7DhXUdfDKhxS3xPW5eSi03zfR3EuxFBEMAzCWrPFgwD/lZYp3JWUQMzR6HgTRalQEj6vUUiyqkfsPg0IytPD1yhBJ+3Q3IfB8qk/kL6WM0PkoPHpd1yBLJDkPOz0ZxfGGgajX2/PMeHcx8LtBosYoMDLuYX1Ms8OwXCf2RjSqs4r53T6KNAxTXmmZ8CgIT9eqbNcDJXu4ZwQCS74cw5revj5nSdR6OWCWNl+12Ysy7Dl2lTH82hgbKeuNRTrOWa1mKBN+jiGqdlbPM9ifUDviasfbADZ4+7R3lim69Bi5b2wys7JxublE8oCrrQc4DnIF5goS8Vsymrzc79/1oiwwoRZDLafM7CQKd6tuMrvoJDoe4XMPJiD3Z77T5DJTpGnIX4+cRPA2i5LkXaiH4Jl6wA4dl9sDtvdX+5QDn0V1UAH1uNKByYtHo0v8xzTz7sEfPNcfM5SFPXOTNgnWf+ki8JxbEVrAtr3GC3B4ZptUx+ci35lFwe3pqVLWprwBB91k/Cudq/JTQJTOv2N8+aiIE5Gjn5zL6QgC2YcSAn/DGgUAQKlmwm++paygpNFv/7KkwP991H4bw=
-  #  on:
-  #    branch: master
-  #    repo: YakDriver/pyppyn
-  #    python: "3.6"
   - provider: pypi
     distributions: sdist bdist_wheel
     user: YakDriver
