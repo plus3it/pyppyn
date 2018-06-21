@@ -1,6 +1,14 @@
 CHANGE LOG
 ==========
 
+0.3.4 - 2018.06.20
+------------------
+* [BUG FIX] Determining available module(s) from a package
+  was not working on Windows. This functionality is not
+  required by GravityBee so it was removed to allow
+  everything to work smoothly on Windows.
+* [ENHANCEMENT] Cleaned up code, comments.
+
 0.3.3 - 2018.05.07
 ------------------
 * [ENHANCEMENT] Integrate with `Satsuki <https://github.com/YakDriver/satsuki>`_ to simplify the release process.

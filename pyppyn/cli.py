@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 """pyppyn cli."""
-import os
-import platform
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals, with_statement)
+
 import sys
 
 import click
@@ -9,6 +10,7 @@ import click
 import pyppyn
 
 click.disable_unicode_literals_warning = True
+
 
 @click.command(context_settings=dict(
     ignore_unknown_options=True,
@@ -27,28 +29,29 @@ click.disable_unicode_literals_warning = True
 @click.option('--display', '-d', 'display', is_flag=True,
               help='Display package information but do not install or \
               import packages.')
-
 def main(**kwargs):
     """Entry point for Pyppyn CLI."""
-
     print("Pyppyn CLI,", pyppyn.__version__)
 
     # Remove unused options
-    empty_keys = [k for k,v in kwargs.items() if not v]
+    empty_keys = [k for k, v in kwargs.items() if not v]
     for k in empty_keys:
         del kwargs[k]
 
-    exit_val = 0
+    exit_val = pyppyn.__EXITOKAY__
 
     # Create an instance
-    p = pyppyn.ConfigRep(**kwargs)
+    pyppyn_instance = pyppyn.ConfigRep(**kwargs)
 
-    if kwargs.get('display',False):
-        if not (p.read_config() and p.load_config()):
+    if kwargs.get('display', False):
+        if not (
+                pyppyn_instance.read_config() and
+                pyppyn_instance.load_config()
+        ):
             exit_val = 1
 
-    elif kwargs.get('auto_load',False):
-        if not p.process_config():
+    elif kwargs.get('auto_load', False):
+        if not pyppyn_instance.process_config():
             exit_val = 1
 
     sys.exit(exit_val)
