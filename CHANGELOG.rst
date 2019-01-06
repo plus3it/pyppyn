@@ -1,13 +1,18 @@
 CHANGE LOG
 ==========
 
+0.3.5 - 2019.01.05
+------------------
+* [ENHANCEMENT] Fix flake8, pylint issues, add pipenv Pipfile, fix
+  compatibility with Python 3.7.
+
 0.3.4 - 2018.06.20
 ------------------
-* [BUG FIX] Determining available module(s) from a package
+* [BUG FIX] Determine available module(s) from a package
   was not working on Windows. This functionality is not
   required by GravityBee so it was removed to allow
   everything to work smoothly on Windows.
-* [ENHANCEMENT] Cleaned up code, comments.
+* [ENHANCEMENT] Clean up code, comments.
 
 0.3.3 - 2018.05.07
 ------------------

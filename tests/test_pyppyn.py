@@ -31,8 +31,8 @@ def configrep():
 def test_app_name_version(configrep):
     """Test reading the config file."""
     configrep.load_config()
-    assert configrep.app_name == "minipippy" \
-        and configrep.app_version == "4.8.2"
+    assert configrep.config['app_name'] == "minipippy" \
+        and configrep.config['app_version'] == "4.8.2"
 
 
 def test_read_cfg_file(configrep):
