@@ -1,8 +1,12 @@
 language: python
-sudo: false
-python:
-  - "3.5"
-  - "3.6"
+matrix:
+  include:
+    - python: 3.5
+    - python: 3.6
+    - python: 3.7
+      dist: xenial
+      sudo: true
+
 env:
   global:
     - secure: hWCHIpuqhVL4ObdjoyyF95xCCBTWeLJO59w1ocAc5paCHtANeQmqZcvoDcB4lBb5nkt2HaLuyqIIAaSIYcAgCQfTAV6eFVCdpf6k1dmMIW9PJR9zclOjc+ietbRFrF21P1J4DSQ7pJ/1Cv2DOm5PL3OELKvCxYd5mJ0uV/94+TkmrA18KqPSr8Psy2HxM4QJVNVSLcifT/W0OoZ7x8VbUCy3qf07xGiqJQtLTutL29kUA/yZii3WU4Y6u6BVKdgKaMf+uK0koscJVaS5bg2NljHSREgHV6coWLFfjibRoDQ1h769nmjb0tL6bgNFlFggTlSgzVVAvVbkdRdRgaHitNSsM+siY46hNXQOM2T7gRvQwwYywhJVhrYLqsR9/MUXUYaJPd+iBsHG+dGZRd9uHmnIoaaVZJa8fMhcBO83IYs7Lhho+cSDZAu1syVG///upeXq7rIztQNxeyFO66OF+HgYebeDF0flTl/Uel8LoQtV4Zy3LQWXrRoaNp915zL3tR7U1Tggomd4PspF9C5MblZx/ljd/+8KZ3SKChTMyQoJPOWrkjq6hmHgymtD/3SK4wrN2AHsnEnOsW7HGHqWlet6PJW3DFBicBLpKpwYqf0qsze6Mq5ZFL/0drA+8GvkyyMyEO+kE7/BzpECBd1hoQp3Oz6YolJBj60NxlFdGzE=
@@ -10,8 +14,11 @@ env:
 install:
   - pip install gravitybee satsuki
   - pip install --editable .
+  - pip install pylint flake8
 script:
   - pytest
+  - pylint pyppyn
+  - flake8
 before_deploy:
   - |
     if [ "$TRAVIS_BRANCH" = "dev" ]; then
@@ -33,14 +40,14 @@ deploy:
     on:
       branch: dev
       repo: YakDriver/pyppyn
-      python: "3.6"
+      python: "3.7"
   - provider: script
     script: satsuki --verbose
     skip_cleanup: true
     on:
       branch: master
       repo: YakDriver/pyppyn
-      python: "3.6"
+      python: "3.7"
   - provider: pypi
     distributions: sdist bdist_wheel
     user: YakDriver
@@ -50,4 +57,4 @@ deploy:
     on:
       tags: true
       repo: YakDriver/pyppyn
-      python: "3.6"
+      python: "3.7"
