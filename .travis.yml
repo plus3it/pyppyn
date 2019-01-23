@@ -1,24 +1,40 @@
 language: python
-matrix:
-  include:
-    - python: 3.5
-    - python: 3.6
-    - python: 3.7
-      dist: xenial
-      sudo: true
-
+python:
+  - "3.5"
+  - "3.6"
 env:
   global:
     - secure: hWCHIpuqhVL4ObdjoyyF95xCCBTWeLJO59w1ocAc5paCHtANeQmqZcvoDcB4lBb5nkt2HaLuyqIIAaSIYcAgCQfTAV6eFVCdpf6k1dmMIW9PJR9zclOjc+ietbRFrF21P1J4DSQ7pJ/1Cv2DOm5PL3OELKvCxYd5mJ0uV/94+TkmrA18KqPSr8Psy2HxM4QJVNVSLcifT/W0OoZ7x8VbUCy3qf07xGiqJQtLTutL29kUA/yZii3WU4Y6u6BVKdgKaMf+uK0koscJVaS5bg2NljHSREgHV6coWLFfjibRoDQ1h769nmjb0tL6bgNFlFggTlSgzVVAvVbkdRdRgaHitNSsM+siY46hNXQOM2T7gRvQwwYywhJVhrYLqsR9/MUXUYaJPd+iBsHG+dGZRd9uHmnIoaaVZJa8fMhcBO83IYs7Lhho+cSDZAu1syVG///upeXq7rIztQNxeyFO66OF+HgYebeDF0flTl/Uel8LoQtV4Zy3LQWXrRoaNp915zL3tR7U1Tggomd4PspF9C5MblZx/ljd/+8KZ3SKChTMyQoJPOWrkjq6hmHgymtD/3SK4wrN2AHsnEnOsW7HGHqWlet6PJW3DFBicBLpKpwYqf0qsze6Mq5ZFL/0drA+8GvkyyMyEO+kE7/BzpECBd1hoQp3Oz6YolJBj60NxlFdGzE=
-
-install:
-  - pip install gravitybee satsuki
+matrix:
+  include:
+    - os: osx
+      language: sh
+      python: "3.7"
+      # Perform the manual steps on osx to install python3 and activate venv
+      before_install:
+        - brew update
+        - brew upgrade python3
+        - python3 -m pip install virtualenv
+        - virtualenv venv -p python3
+        - source venv/bin/activate
+    - os: windows
+      language: sh
+      python: "3.7"
+      before_install:
+        - choco install python3
+        - export PATH="/c/Python37:/c/Python37/Scripts:$PATH"
+        - python -m pip install --upgrade pip==18.1 wheel
+    # Obtain Python 3.7 from xenial as per https://github.com/travis-ci/travis-ci/issues/9815
+    - python: 3.7
+      dist: xenial
+install: 
+  - pip install -U -r requirements-test.txt
   - pip install --editable .
-  - pip install pylint flake8
 script:
-  - pytest
   - pylint pyppyn
+  - pylint tests/*py
   - flake8
+  - pytest
 before_deploy:
   - |
     if [ "$TRAVIS_BRANCH" = "dev" ]; then
@@ -40,14 +56,14 @@ deploy:
     on:
       branch: dev
       repo: YakDriver/pyppyn
-      python: "3.7"
+      python: "3.6"
   - provider: script
     script: satsuki --verbose
     skip_cleanup: true
     on:
       branch: master
       repo: YakDriver/pyppyn
-      python: "3.7"
+      python: "3.6"
   - provider: pypi
     distributions: sdist bdist_wheel
     user: YakDriver
@@ -57,4 +73,4 @@ deploy:
     on:
       tags: true
       repo: YakDriver/pyppyn
-      python: "3.7"
+      python: "3.6"
