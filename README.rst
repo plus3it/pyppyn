@@ -49,8 +49,7 @@ dependencies without installing the package.
 .. code-block:: bash
 
     $ pyppyn --setup-path tests/minipippy --platform linux -v -a
-    Pyppyn CLI, 0.3.2
-    [Pyppyn] Verbose mode
+    Pyppyn CLI, 0.3.5
     [Pyppyn] Platform: linux
     [Pyppyn] Setup path: tests/minipippy
     [Pyppyn] Reading configuration of tests/minipippy
@@ -91,7 +90,7 @@ This is a sample usage of Pyppyn from a Python script.
     import pyppyn
 
     # Create an instance
-    p = pyppyn.ConfigRep(setup_path="tests/minipippy",verbose=True)
+    p = pyppyn.ConfigRep(setup_path="tests/minipippy")
 
     # Load config, install dependencies and import a module from the package
     p.process_config()

@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# pylint: disable=redefined-outer-name
 """pyppyn test script."""
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals, with_statement)
@@ -25,7 +26,7 @@ def test_non_existing_config(bad_configrep):
 @pytest.fixture
 def configrep():
     """Return a ConfigRep instance using the included minipippy package."""
-    return ConfigRep(setup_path="tests/minipippy", verbose=True)
+    return ConfigRep(setup_path="tests/minipippy")
 
 
 def test_app_name_version(configrep):

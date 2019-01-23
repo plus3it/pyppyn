@@ -28,6 +28,8 @@ from __future__ import (absolute_import, division, print_function,
 import glob
 import importlib
 import os
+import logging
+import logging.config
 import platform
 import shutil
 import subprocess
@@ -35,9 +37,13 @@ import sys
 import uuid
 import zipfile
 
-__version__ = "0.3.5"
+__version__ = "0.3.6"
 
 __EXITOKAY__ = 0
+
+logging.config.fileConfig(
+    os.path.join(os.path.dirname(os.path.abspath(__file__)), 'logging.conf'))
+logger = logging.getLogger(__name__)        # pylint: disable=invalid-name
 
 
 class ConfigRep():
@@ -54,7 +60,6 @@ class ConfigRep():
             setup.cfg are located).
         platform: A str of the platform. This is automatically
             determined or can be overriden.
-        verbose: A bool of whether to display extra messages.
         config: A dict representing the values in the config
             file.
         python_version: A float with the major and minor versions of
@@ -69,14 +74,6 @@ class ConfigRep():
     STATE_LOAD = "LOAD"
     STATE_INSTALLED = "INSTALLED"
     VERB_MESSAGE_PREFIX = "[Pyppyn]"
-
-    verbose = False
-
-    @classmethod
-    def verboseprint(cls, *a, **k):
-        """Print a verbose message."""
-        if cls.verbose:
-            print(cls.VERB_MESSAGE_PREFIX, *a, **k)
 
     @classmethod
     def install_package(cls, package):
@@ -119,7 +116,6 @@ class ConfigRep():
 
     def __init__(self, **kwargs):
         """Instantiate."""
-        # global __VERBOSE__
         self._status = {}
         self._status['should_load'] = 0
         self._status['did_load'] = 0
@@ -128,12 +124,10 @@ class ConfigRep():
         # Initial values
         self.setup_path = kwargs.get('setup_path', ".")
         self.platform = kwargs.get('platform', platform.system()).lower()
-        ConfigRep.verbose = kwargs.get('verbose', False)
 
-        # Verbose output
-        ConfigRep.verboseprint("Verbose mode")
-        ConfigRep.verboseprint("Platform:", self.platform)
-        ConfigRep.verboseprint("Setup path:", self.setup_path)
+        # Logging
+        logger.info("Platform: %s", self.platform)
+        logger.info("Setup path: %s", self.setup_path)
 
         # will hold configuration attributes
         self.config = {}
@@ -161,7 +155,7 @@ class ConfigRep():
             self.install_packages()
 
     def _create_wheel(self):
-        ConfigRep.verboseprint("Building wheel from", self.setup_path)
+        logger.info("Building wheel from %s", self.setup_path)
         # if build and/or dist directories already exist, rename
         self._rename_end = '_' + uuid.uuid1().hex[:16]
 
@@ -180,27 +174,27 @@ class ConfigRep():
         commands = ['python', 'setup.py', 'bdist_wheel', '--universal']
         sub_return = subprocess.run(commands, check=True)
         if sub_return.returncode != 0:
-            ConfigRep.verboseprint("Wheel build failed")
+            logger.error("Pyppyn could not setup package. Wheel build failed!")
             raise ChildProcessError
 
         os.chdir('dist')
 
-        ConfigRep.verboseprint("Extracting wheel (unzipping)")
+        logger.info("Extracting wheel (unzipping)")
 
         wheel_file = None
 
         for wheel_file in glob.glob(os.path.join('.', '*whl')):
-            ConfigRep.verboseprint("Wheel archive found:", wheel_file)
+            logger.info("Wheel archive found: %s", wheel_file)
 
         if wheel_file is not None:
-            ConfigRep.verboseprint("Unzipping:", wheel_file)
+            logger.info("Unzipping: %s", wheel_file)
             zip_ref = zipfile.ZipFile(wheel_file, 'r')
             zip_ref.extractall(ConfigRep.WHEEL_TEMP_DIR)
             zip_ref.close()
 
     def _wheel_directories(self):
         # look at directories wheel created
-        ConfigRep.verboseprint("Going through wheel directories")
+        logger.info("Going through wheel directories")
         self.config["packages"] = []
         for created_file in glob.glob(os.path.join('.', '*')):
 
@@ -214,12 +208,12 @@ class ConfigRep():
 
     def _wheel_top_level(self):
         # top level
-        ConfigRep.verboseprint("Looking at wheel top level")
+        logger.info("Looking at wheel top level")
         self.config["top_level"] = open("top_level.txt", "r").read().strip()
 
     def _wheel_console_scripts(self):
         # console scripts
-        ConfigRep.verboseprint("Reading names of console scripts")
+        logger.info("Reading names of console scripts")
         ep_file = open("entry_points.txt", "r")
         self.config["console_scripts"] = []
         console_scripts = False
@@ -235,7 +229,7 @@ class ConfigRep():
 
     def _wheel_metadata(self):
         # metadata
-        ConfigRep.verboseprint("Reading wheel metadata")
+        logger.info("Reading wheel metadata")
         bulk = open("METADATA", "r").read()
         parts = bulk.split("\n\n")
         if len(parts) > 1:
@@ -256,7 +250,7 @@ class ConfigRep():
 
     def _wheel_cleanup(self):
         # put back dist and build
-        ConfigRep.verboseprint("Cleaning up wheel")
+        logger.info("Cleaning up wheel")
         shutil.rmtree(os.path.join(self.setup_path, 'build'))
         if os.path.isdir(os.path.join(
                 self.setup_path,
@@ -279,11 +273,11 @@ class ConfigRep():
 
     def read_config(self):
         """Create wheel from the setup path given and read metadata."""
-        ConfigRep.verboseprint("Reading configuration of", self.setup_path)
+        logger.info("Reading configuration of %s", self.setup_path)
 
         # check for existence of setup.py, required
         if not os.path.isfile(os.path.join(self.setup_path, 'setup.py')):
-            ConfigRep.verboseprint("setup.py not found at", self.setup_path)
+            logger.info("setup.py not found at %s", self.setup_path)
             raise FileNotFoundError
 
         original_cwd = os.getcwd()
@@ -327,12 +321,7 @@ class ConfigRep():
             marker_parts[i] = mark_part.strip().strip('"').strip("'").strip()
 
         if len(marker_parts) != 3:
-            ConfigRep.verboseprint(
-                "Unsupported marker [",
-                package,
-                "]:",
-                marker
-            )
+            logger.info("Unsupported marker [%s]: %s", package, marker)
             self.reqs['unparsed'].append(package)
 
         elif marker_parts[0] == 'platform_system' \
@@ -379,12 +368,9 @@ class ConfigRep():
             self.config["metadata"]["version"][0]
         ).lower()
 
-        ConfigRep.verboseprint("This Python:", self.python_version)
-        ConfigRep.verboseprint(
-            "Version from",
-            self.setup_path,
-            ":",
-            self.config['app_version']
+        logger.info("This Python version: %s", self.python_version)
+        logger.info(
+            "Version from %s: %s", self.setup_path, self.config['app_version']
         )
 
         # Parsing some (but not all) possible markers.
@@ -404,16 +390,13 @@ class ConfigRep():
             else:
                 self.reqs['base'].append(req.lower())
 
-        ConfigRep.verboseprint("Install Requires:")
-        ConfigRep.verboseprint("\tGenerally required:", self.reqs['base'])
-        ConfigRep.verboseprint("\tFor this OS:", self.reqs['os'])
-        ConfigRep.verboseprint(
-            "\tFor this Python version:",
-            self.reqs['python']
-        )
-        ConfigRep.verboseprint("\tUnparsed markers:", self.reqs['unparsed'])
-        ConfigRep.verboseprint(
-            "\tOthers listed but not required (e.g., wrong platform):",
+        logger.info("Install Requires:")
+        logger.info("\tGenerally required: %s", self.reqs['base'])
+        logger.info("\tFor this OS: %s", self.reqs['os'])
+        logger.info("\tFor this Python version: %s", self.reqs['python'])
+        logger.info("\tUnparsed markers: %s", self.reqs['unparsed'])
+        logger.info(
+            "\tOthers listed but not required (e.g., wrong platform): %s",
             self.reqs['other']
         )
 
@@ -435,7 +418,7 @@ class ConfigRep():
                 + self.reqs['python'] \
                 + self.reqs['base'] \
                 + self.reqs['unparsed']:
-            ConfigRep.verboseprint("Installing package:", package)
+            logger.info("Installing package: %s", package)
             if ConfigRep.install_package(package):
                 self._status['did_load'] += 1
 

@@ -1,32 +1,58 @@
 language: python
+python:
+  - "3.5"
+  - "3.6"
+  - "pypy3"
 matrix:
   include:
-    - python: 3.5
-    - python: 3.6
+    - os: osx
+      osx_image: xcode10.1
+      language: sh
+      python: "3.7"
+      # Perform the manual steps on osx to install python3 and activate venv
+      before_install:
+        - brew upgrade python3
+        - python3 -m pip install virtualenv
+        - virtualenv $HOME/venv -p python3
+        - source $HOME/venv/bin/activate
+      before_cache:
+        - brew cleanup
+        - rm -f $HOME/.cache/pip/log/debug.log
+      cache:
+        directories:
+          - $HOME/Library/Caches/Homebrew
+          - /usr/local/Homebrew/Library/Homebrew
+          - /usr/local/Homebrew/Library/Taps
+          - $HOME/.cache/pip
+    # Obtain Python 3.7 from xenial as per https://github.com/travis-ci/travis-ci/issues/9815
     - python: 3.7
       dist: xenial
-      sudo: true
-
-env:
-  global:
-    - secure: hWCHIpuqhVL4ObdjoyyF95xCCBTWeLJO59w1ocAc5paCHtANeQmqZcvoDcB4lBb5nkt2HaLuyqIIAaSIYcAgCQfTAV6eFVCdpf6k1dmMIW9PJR9zclOjc+ietbRFrF21P1J4DSQ7pJ/1Cv2DOm5PL3OELKvCxYd5mJ0uV/94+TkmrA18KqPSr8Psy2HxM4QJVNVSLcifT/W0OoZ7x8VbUCy3qf07xGiqJQtLTutL29kUA/yZii3WU4Y6u6BVKdgKaMf+uK0koscJVaS5bg2NljHSREgHV6coWLFfjibRoDQ1h769nmjb0tL6bgNFlFggTlSgzVVAvVbkdRdRgaHitNSsM+siY46hNXQOM2T7gRvQwwYywhJVhrYLqsR9/MUXUYaJPd+iBsHG+dGZRd9uHmnIoaaVZJa8fMhcBO83IYs7Lhho+cSDZAu1syVG///upeXq7rIztQNxeyFO66OF+HgYebeDF0flTl/Uel8LoQtV4Zy3LQWXrRoaNp915zL3tR7U1Tggomd4PspF9C5MblZx/ljd/+8KZ3SKChTMyQoJPOWrkjq6hmHgymtD/3SK4wrN2AHsnEnOsW7HGHqWlet6PJW3DFBicBLpKpwYqf0qsze6Mq5ZFL/0drA+8GvkyyMyEO+kE7/BzpECBd1hoQp3Oz6YolJBj60NxlFdGzE=
-
+    - os: windows
+      language: sh
+      python: "3.7"
+      before_install:
+        - choco install python3
+        - export PATH="/c/Python37:/c/Python37/Scripts:$PATH"
+        - python -m pip install -r requirements-test.txt
+  fast_finish: true     
+cache: pip
+before_cache:
+  - rm -f $HOME/.cache/pip/log/debug.log
 install:
-  - pip install gravitybee satsuki
+  - pip install -U -r requirements-test.txt
   - pip install --editable .
-  - pip install pylint flake8
 script:
-  - pytest
   - pylint pyppyn
+  - pylint tests/*py
   - flake8
+  - pytest
 before_deploy:
   - |
     if [ "$TRAVIS_BRANCH" = "dev" ]; then
       sed -i -E "s/^(version = )(.*)/\1\2.$TRAVIS_BUILD_NUMBER/" $TRAVIS_BUILD_DIR/setup.cfg
     elif [ "$TRAVIS_BRANCH" = "master" ]; then
-      gravitybee --verbose --sha file
-      export SATS_TAG=$(grep "version = " $TRAVIS_BUILD_DIR/setup.cfg | sed "s/version = //")
-      export SATS_BODY="* [Pyppyn v$SATS_TAG CHANGELOG](https://github.com/YakDriver/pyppyn/blob/$SATS_TAG/CHANGELOG.rst)"
+      export RELEASE_VERSION=$(grep "version = " $TRAVIS_BUILD_DIR/setup.cfg | sed "s/version = //")
+      export RELEASE_BODY="* [pyppyn v$RELEASE_VERSION CHANGELOG](https://github.com/YakDriver/pyppyn/blob/$RELEASE_VERSION/CHANGELOG.rst)"
     fi
 deploy:
   - provider: pypi
@@ -40,14 +66,20 @@ deploy:
     on:
       branch: dev
       repo: YakDriver/pyppyn
-      python: "3.7"
-  - provider: script
-    script: satsuki --verbose
+      python: "3.6"
+  - provider: releases
+    name: $RELEASE_VERSION
+    tag_name: $RELEASE_VERSION
+    target_commitish: $TRAVIS_COMMIT
+    body: $RELEASE_BODY
+    draft: false
     skip_cleanup: true
+    api_key:
+      secure: bk3oSSuNgpAFlEY9lyvPL/4eJoO0eUVz8Yh4gciOK+YFW8vCpH6c33psKd50QAxZi5sH2DhGN/ZfMwpZsX6x1jFDP7A4eRNh5hjAKaJmgLHigEzvp8rLgzQTJKafT/ay3HQclQyTTVT6GqO2b39pXHVttfY7XzmfQkwR9j9r+hfA/ktyl/1Mka32lPJokakU20sTvARr/pdeq0l5m2EJjJM5YIUuzjbd9D3t52va87eDzfOw64SPy1BdM0ZYaM2iZloFQg+gyGYLP0DX2qN99yKT9WyfVbaxrUcIY1kgMoWC9W7p/hyfU0qtHnvEX8W5sE7l4nfIfWOY3oclYUwV8wIPDqaB7tTldBgNWb5c1pGa3VnfFhzaToD7V7UYj7M9IDCoeBJK07kaHN2a3iYgETv/IkjzybXq42hSbomkv+iSD7iCvM5ewFEVJ6n0WQp9Q/uNrbpDwdMQ5ONIILP2KYmtNCFRIHkIBwYR2ku9UMrRnsyjOXCx49EkibwXkvrv4TAH9L8f7K6WeTxIpwGkQ+NrzX3FzWb9beYRa96yKkbfW3Hm196SyPSeE4qqd3ilaKixvtE1l8XqJt0QmdrGiyDKts17p5pVNulqyIuLrcOkXGk7JmzpOXkXpT9P88NacugBH/4DuM9Z/p+nm+pUtxjPDAxtAL2rgoufBjRlWNo=
     on:
       branch: master
       repo: YakDriver/pyppyn
-      python: "3.7"
+      python: "3.6"
   - provider: pypi
     distributions: sdist bdist_wheel
     user: YakDriver
@@ -57,4 +89,4 @@ deploy:
     on:
       tags: true
       repo: YakDriver/pyppyn
-      python: "3.7"
+      python: "3.6"

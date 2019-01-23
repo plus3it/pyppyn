@@ -21,8 +21,6 @@ click.disable_unicode_literals_warning = True
 @click.option('--platform', '-p', 'platform', default=None,
               help='Defaults to the current machine, use this option \
               to override (e.g., Windows or Linux).')
-@click.option('--verbose', '-v', 'verbose', is_flag=True,
-              help='Displays extra information about processing.')
 @click.option('--auto-load', '-a', 'auto_load', is_flag=True,
               help='Install, if necessary, and import all required \
               packages.')
