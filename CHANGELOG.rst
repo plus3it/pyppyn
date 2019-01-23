@@ -1,6 +1,11 @@
 CHANGE LOG
 ==========
 
+0.3.6 - 2019.01.23
+------------------
+* [ENHANCEMENT] Replace print with log.
+* [ENHANCEMENT] Improve compatibility across Windows, MacOS, Linux; add tests to Travis CI.
+
 0.3.5 - 2019.01.05
 ------------------
 * [ENHANCEMENT] Fix flake8, pylint issues, add pipenv Pipfile, fix
