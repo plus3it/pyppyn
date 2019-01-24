@@ -1,6 +1,12 @@
 CHANGE LOG
 ==========
 
+0.3.8 - 2019.01.24
+------------------
+* [ENHANCEMENT] Restructure Travis CI linting, testing, deploying so
+  deploy only happens when other stages complete successfully.
+* [ENHANCEMENT] Improve speed of MacOS builds significantly.
+
 0.3.7 - 2019.01.23
 ------------------
 * [ENHANCEMENT] Minor change to Travis CI, remove AppVeyor.
@@ -18,7 +24,7 @@ CHANGE LOG
 
 0.3.4 - 2018.06.20
 ------------------
-* [BUG FIX] Determine available module(s) from a package
+* [FIX] Determine available module(s) from a package
   was not working on Windows. This functionality is not
   required by GravityBee so it was removed to allow
   everything to work smoothly on Windows.
@@ -32,13 +38,13 @@ CHANGE LOG
 
 0.3.2 - 2018.04.26
 ------------------
-* [BUG FIX] Minor tweak to way that work directories are created to
+* [FIX] Minor tweak to way that work directories are created to
   avoid namespace collisions using UUIDs.
 
 0.3.1 - 2018.04.24
 ------------------
 * [ENHANCEMENT] Add convenience methods for accessing configuration data.
-* [BUG FIX] Improve state handling.
+* [FIX] Improve state handling.
 
 0.3.0 - 2018.04.23
 ------------------
