@@ -1,10 +1,15 @@
 CHANGE LOG
 ==========
 
+0.3.7 - 2019.01.23
+------------------
+* [ENHANCEMENT] Minor change to Travis CI, remove AppVeyor.
+
 0.3.6 - 2019.01.23
 ------------------
 * [ENHANCEMENT] Replace print with log.
-* [ENHANCEMENT] Improve compatibility across Windows, MacOS, Linux; add tests to Travis CI.
+* [ENHANCEMENT] Improve compatibility across Windows, MacOS,
+  Linux; add tests to Travis CI.
 
 0.3.5 - 2019.01.05
 ------------------
