@@ -36,13 +36,15 @@ matrix:
         - python -m pip install virtualenv
         - virtualenv $HOME/venv
         - source $HOME/venv/Scripts/activate
+        - python -m pip install -r requirements-pip.txt
         - python -m pip install -r requirements-test.txt
   fast_finish: true     
 cache: pip
 before_cache:
   - rm -f $HOME/.cache/pip/log/debug.log
 install:
-  - pip install -U -r requirements-test.txt
+  - pip install -r requirements-pip.txt
+  - pip install -r requirements-test.txt
   - pip install --editable .
 script:
   - pylint pyppyn
