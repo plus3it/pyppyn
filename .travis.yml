@@ -89,7 +89,7 @@ jobs:
       install:
         - echo "Install"
       script:
-        - export RELEASE_VERSION=$(grep "version = " $TRAVIS_BUILD_DIR/setup.cfg | sed "s/version = //")
+        - export RELEASE_VERSION=$(grep "__version__" $TRAVIS_BUILD_DIR/pyppyn/__init__.py | sed 's/__version__ = //' | sed 's/"//g')
         - export RELEASE_BODY="* [pyppyn v$RELEASE_VERSION CHANGELOG](https://github.com/YakDriver/pyppyn/blob/$RELEASE_VERSION/CHANGELOG.rst)"
       deploy:
         - provider: releases
