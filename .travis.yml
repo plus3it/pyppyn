@@ -12,8 +12,8 @@ cache: pip
 before_cache:
   - rm -f $HOME/.cache/pip/log/debug.log
 install:
-  - pip install -r requirements-pip.txt
-  - pip install -r requirements-test.txt
+  - pip install -r requirements/pip.txt
+  - pip install -r requirements/test.txt
   - pip install --editable .
 script:
   - pytest
@@ -22,8 +22,8 @@ jobs:
     - stage: lint
       python: 3.6
       install:
-        - pip install -r requirements-pip.txt
-        - pip install -r requirements-lint.txt
+        - pip install -r requirements/pip.txt
+        - pip install -r requirements/lint.txt
         - pip install --editable .
       script:
         - pylint pyppyn
@@ -43,8 +43,8 @@ jobs:
         - virtualenv $HOME/venv
         - source $HOME/venv/Scripts/activate
       install:
-        - python -m pip install -r requirements-pip.txt
-        - python -m pip install -r requirements-test.txt
+        - python -m pip install -r requirements/pip.txt
+        - python -m pip install -r requirements/test.txt
         - pip install --editable .
     - stage: test
       os: osx
@@ -56,9 +56,6 @@ jobs:
         - python3 -m pip install virtualenv
         - virtualenv $HOME/venv -p python3
         - source $HOME/venv/bin/activate
-      before_cache:
-        - brew cleanup
-        - rm -f $HOME/.cache/pip/log/debug.log
       cache:
         directories:
           - $HOME/Library/Caches/Homebrew
@@ -66,31 +63,33 @@ jobs:
           - /usr/local/Homebrew/Library/Taps
           - $HOME/.cache/pip
     - stage: deploy
-      if: branch = dev
+      if: branch = dev AND repo = plus3it/pyppyn
       python: 3.6
       install:
         - echo "Install"
+        - pip install pyOpenSSL --upgrade
       script:
         - sed -i -E "s/^(__version__ = \")(.*)\"/\1\2.$TRAVIS_BUILD_NUMBER\"/" $TRAVIS_BUILD_DIR/pyppyn/__init__.py
       deploy:
         - provider: pypi
           server: https://test.pypi.org/legacy/
           distributions: sdist bdist_wheel
-          user: YakDriver
+          user: plus3it
           password:
-            secure: Ll07zP0rCGNtI60s3UFpYx9DRqoHMdKVEaGN7NnoFbPJtc+0wi4NE8ZlQXDCvdndDowiolJD5l0n/kO1XM7RSkaYpkSq7uHkOKnwvGPfVD9jt7aHkMT0hxij42v0+mbp/gxJZG0K+oouq34O6CgGzR9OOM8/6Z9xkMp72m0ULkIQ6SJyYPZ95zFeHumBLTRUWYhw/6jQNsTmyVwB1gSiB12dj2PkrlkZfXuZpy+QgwO2lmcl/b5jvWk8gPv1DxggV4FmaaXXlaJkV3+LSpIs0aiXX1vmS2Z+UXqJ2F9TY9d57b/Rk2bz7E5biVlJRSkLYyRteZUjzmeENZi20nX5t8DKB0EhJ5G6toEphTIY0SLLpbCWtmi5e/wv6FzZPvb86t9IJgp8kEZKHukofo4MwysXnt1fUGyqHpZeK8cGx68+QKisGsvrAkDqWrzeUR6IBS50hQbcOua2uVFgBui3jh3+TuTEiSNtED4DucEIi2RaVJBHGPiFM+ZV7hy3DSB6gGfLGmsC9NmUsZrJ5jMJXmKsCmOuttz7YszdeGbNLcv7lBlvDU4tA+6kWPXG9Wj4t326GnSvuHS7q5684Cv6cq/u4iI7bqS0RoQ8QbsRqANxWoBeo3X0AWdi6xsz/83ljMzROLTxV75BCgPXUeIL9iTY26owGw2hE6LDRkUitXI=
+            secure: Ms9MADWwUuFpiHv2ee2cyEu04k7NLGgiywcGWVEFMOZdfE8BW6xD9oBMyISY7mkqO1Z5o7qyLbPuFNqhJVXnIX5IuqDiMvd0SViR9AmvErhanM68Iarwz5zT6gQt5V3QEeIdgTIyVCcR5jikUyhhE/HUsXeyD2RKk+pVk8wWbfaPXquho03ztNh1PnE7s2W2mex5oTxYA8IFMY8xBtGMdXkPusrZmaBN3GU8RUoATsI1tvyPN6ydMjXDCzCCWNlMdMn8i6FmsJo7m6G8y+E3CNBIj3qUbe2ZwNO89unuvuwRJ3Deah45dvT6MkqQgJ74l6IAzv6PtQGBrcC1xTsNohUfgTViJTday4zc26e1I0Cm9r4C1Ba6eMTioYFoKxL/F8cGLalh1o1+G9wZfbuWnVSMkFpdD8LHIR1Ssd3dINc9+ELZUTRehLzjqBEecienunNTckBhARoAMzfwWGSJG35qGF6UjnJMm1s1O+oOLarKTde2ydD9KRVosw05Kq5IlHAoVVxXJwv33K0+JTDKjgTfIIGz0H8gdsxoufSTDwRIk+PEwftlkU8e5hnwnmPFkRI8w4lHwTVt5SVxpPpwBjbUpPXA5w7YYSV6MPQFTlOJlEGDlCrCHCthwWft6pKA7iNBoLuavYrW7FvTKXlrFxidFJWQ0EpGx1abZpNUCfo=
           skip_cleanup: true
           skip_upload_docs: true
           on:
             branch: dev
+            repo: plus3it/pyppyn
     - stage: deploy
-      if: branch = master
+      if: branch = master AND repo = plus3it/pyppyn
       python: 3.6
       install:
         - echo "Install"
       script:
         - export RELEASE_VERSION=$(grep "__version__" $TRAVIS_BUILD_DIR/pyppyn/__init__.py | sed 's/__version__ = //' | sed 's/"//g')
-        - export RELEASE_BODY="* [pyppyn v$RELEASE_VERSION CHANGELOG](https://github.com/YakDriver/pyppyn/blob/$RELEASE_VERSION/CHANGELOG.rst)"
+        - export RELEASE_BODY="* [pyppyn v$RELEASE_VERSION CHANGELOG](https://github.com/plus3it/pyppyn/blob/$RELEASE_VERSION/CHANGELOG.rst)"
       deploy:
         - provider: releases
           name: $RELEASE_VERSION
@@ -100,11 +99,11 @@ jobs:
           draft: false
           skip_cleanup: true
           api_key:
-            secure: bk3oSSuNgpAFlEY9lyvPL/4eJoO0eUVz8Yh4gciOK+YFW8vCpH6c33psKd50QAxZi5sH2DhGN/ZfMwpZsX6x1jFDP7A4eRNh5hjAKaJmgLHigEzvp8rLgzQTJKafT/ay3HQclQyTTVT6GqO2b39pXHVttfY7XzmfQkwR9j9r+hfA/ktyl/1Mka32lPJokakU20sTvARr/pdeq0l5m2EJjJM5YIUuzjbd9D3t52va87eDzfOw64SPy1BdM0ZYaM2iZloFQg+gyGYLP0DX2qN99yKT9WyfVbaxrUcIY1kgMoWC9W7p/hyfU0qtHnvEX8W5sE7l4nfIfWOY3oclYUwV8wIPDqaB7tTldBgNWb5c1pGa3VnfFhzaToD7V7UYj7M9IDCoeBJK07kaHN2a3iYgETv/IkjzybXq42hSbomkv+iSD7iCvM5ewFEVJ6n0WQp9Q/uNrbpDwdMQ5ONIILP2KYmtNCFRIHkIBwYR2ku9UMrRnsyjOXCx49EkibwXkvrv4TAH9L8f7K6WeTxIpwGkQ+NrzX3FzWb9beYRa96yKkbfW3Hm196SyPSeE4qqd3ilaKixvtE1l8XqJt0QmdrGiyDKts17p5pVNulqyIuLrcOkXGk7JmzpOXkXpT9P88NacugBH/4DuM9Z/p+nm+pUtxjPDAxtAL2rgoufBjRlWNo=
+            secure: uibJIsO66C74yvBstlMAWaXS8wJv8P2pUOtRV43uC7eOsPeIaHYFPrDfHtVA/ChaU9gErr9u58b+bo2RE3BoT29fk14TGK6k/jSvmWIDkj/i+2rvQS43dWEepqisO5CddTEWPNNpbWFtIeVO3D6ybtIfRmbpaZ41z4Aj84hzZGG8/4JCdVYh1w68EcDz67FGes1QLCStvQR2SsTiHAyzTCZ2CnukqGZtJhd7M9uqKCjdkk4NW+X7SWbMTWGXfFrpIL2C16NbJ7jfu0vASvPUr5dQpsUbrg5JjeSdVKDl71mwh9CKHXNh52HBrzkU+ct9/sXWMea1IKofOZBrPcMDEDhaOHEmb/LRSQqAH0YEM9JjdvXNQuIQQ7VmpwJNqmPRuI5p5GrWI7biBMfgJTs5uhRTPM8GdHejVcvUmsb1NY7SKYI2HiWwhTWpk83/Hs8hR5dViTi5O4frw9CGwzR8h22ufrV8GHNX2cYKQJoHHaE97Z+FadRBWASXc6fKGWjt4MW5SUqlC64YRhQFAL1wzFKV59V2jHfTBHR9Qfz8lS2SB5PZwQmO7z1dW9/ttdiAanHnDl7SVgVFQv5hNWRZk4lvL1/M86LZSwjX8WPmlS5KhZsgKwsR7s3DdFr4Am2+mjyHirW+GJtJLIic2wPJAjGuOBkEx7uJmIsRzf5GOus=
           on:
             branch: master
     - stage: deploy
-      if: tag is present
+      if: tag is present AND repo = plus3it/pyppyn
       python: 3.6
       install:
         - echo "Install"
@@ -113,9 +112,9 @@ jobs:
       deploy:
           - provider: pypi
             distributions: sdist bdist_wheel
-            user: YakDriver
+            user: plus3it
             password:
-              secure: msxEPL7wdduLIN+T9xm58nsN2of/wqUU985oJUjsTx6AiUBJFBfLeo/xJ92ne93ZSnlJA29Pj2zi6DeW2o9hJ/WhPoicBUdpQCdTEfsKZGS2CXHVQLg8D5njJi32EWha9dV5PicwQwxN1olHtG1KrU5N/NljWWvMuK3UHy74BSnikxu8s7t9Tww5umlecd8rQGyARipdQGOUQDmJre5RMmFSldmnQ+TkO47uBMkhdvbnixoqM2sAyqeQ198G4nL35bx7zSGuhZjcdS8UgSz+QeAyx9wDiwqEb6GgR+zJMU934bLMtNgV0sfHYsvm6Pkg5HnCmpPieXBYjCtjeJNIeZVGsP4Speq/Q7nKoxx/Yl1/CtBCX5qEUzjcZo0YizA5ipeYzz1jios9XkDbignJAW5iy4M6MKVdSn5XOW0Qsg6CzEJJGyR+5lsVc3okU2MaRmXKA2PdldknEsgGjy5zc75jXjEfWRQsuM1Tp6dFN3898mjYjmJfFQK8z74sq7IJXQYHi00nmslgkWEJVgOqRydAn+vqy9ug3h6dqw+0BK7A/tg28HkCucG9/eMyqcZT2yYulKSxy7E5C55nmzajVhD5RqIM561dNsmq8mpuJpWlp8RIQKgb5WAPQ/52T/3T+R/tc2vGFc/Ra7dXHygrQHfFSbD/dl4nNQY8rMmWLek=
+              secure: Hs9i6TQH4uqyGdnMRRoywaTbM589SIVQtgQtrdNdE0SYw7JoFKVI/AwEqjDyjsfrOLaqnl8LQ3yfNZDrW5thioj1r7MWjDOR7Cm0NwTcuHkrVE3CjVXBPE2TmevHFN59H/7TOLBW6SzQ8Wo6+9c71BAxR4agQncpq2eCoJZoepMAcfBPHpaZpExSXkH/vn5gXONfGMJaEcKU4hlP2syeyvuvCsMhHCAPr+iLTf2Lg+eWwldWnVJoZcd0u23wH01j3IZshu6HWSohMb3wAJLhjT4q7JMRD1tui600DViFdrxPQ3FSitY+ucSUZWUwX8XOtKckAlLrGIdytFkkD5j/PtIChV5cbT7peglxYuuAXKNLb0WTkJ1K6B8vgSgvs+v1dRZni3+OsUaJbnuOq8vNhgNQ4H0wUGYZDts3j7Dh2Th48Mxgt/Ebc2OToeHB81TaGSgWd0+xNQ3ewWOFdlcWjOwcsuY7xz674uD/Ocb/uq6VthX+ES0xo0QEO7PyapUwx0dpNaZDLd1azFYyY14xDGTxX3oTBGU/HOMB5ozAIap/DWswlMmOcPJ/jzK1scH49ba145PTKZ+Ln5/Ib6luOYHoNySmFyHZ3jgBk1qCUhCmnRFk4HUjRDQBjXNkr6SRXtQrbkVPOh4YXmQ+eYLP5fPip48Qv7GCNpN6ZBftwVQ=
             skip_upload_docs: true
             on:
               tags: true
