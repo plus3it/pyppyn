@@ -7,6 +7,15 @@ python:
   - "3.5"
   - "3.6"
   - "pypy3"
+
+env:
+  global:
+    - REPO="${TRAVIS_REPO_SLUG#*/}"
+    - OWNER=plus3it
+    - RELEASE_BRANCH=master
+    - RELEASE_VERSION=$(grep -E '^current_version' $TRAVIS_BUILD_DIR/.bumpversion.cfg | sed 's/^.*= //')
+    - PRIOR_VERSION=$(git describe --abbrev=0 --tags)
+
 stage: test
 cache: pip
 before_cache:
@@ -63,13 +72,13 @@ jobs:
           - /usr/local/Homebrew/Library/Taps
           - $HOME/.cache/pip
     - stage: deploy
-      if: branch = dev AND repo = plus3it/pyppyn
+      if: branch = env(RELEASE_BRANCH) AND type != pull_request
       python: 3.6
-      install:
-        - echo "Install"
-        - pip install pyOpenSSL --upgrade
+      env:
+        - JOB="Deploy to Test PyPI"
+      install: skip
       script:
-        - sed -i -E "s/^(__version__ = \")(.*)\"/\1\2.$TRAVIS_BUILD_NUMBER\"/" $TRAVIS_BUILD_DIR/pyppyn/__init__.py
+        - sed -i -E "s/^(__version__ = \")(.*)\"/\1\2.$TRAVIS_BUILD_NUMBER\"/" $TRAVIS_BUILD_DIR/$REPO/__init__.py
       deploy:
         - provider: pypi
           server: https://test.pypi.org/legacy/
@@ -80,16 +89,16 @@ jobs:
           skip_cleanup: true
           skip_upload_docs: true
           on:
-            branch: dev
-            repo: plus3it/pyppyn
+            branch: $RELEASE_BRANCH
+            condition: '"$PRIOR_VERSION" = "$RELEASE_VERSION"'
     - stage: deploy
-      if: branch = master AND repo = plus3it/pyppyn
+      if: branch = env(RELEASE_BRANCH) AND type != pull_request
       python: 3.6
-      install:
-        - echo "Install"
+      env:
+        - JOB="Deploy to GitHub Releases"
+      install: skip
       script:
-        - export RELEASE_VERSION=$(grep "__version__" $TRAVIS_BUILD_DIR/pyppyn/__init__.py | sed 's/__version__ = //' | sed 's/"//g')
-        - export RELEASE_BODY="* [pyppyn v$RELEASE_VERSION CHANGELOG](https://github.com/plus3it/pyppyn/blob/$RELEASE_VERSION/CHANGELOG.rst)"
+        - echo RELEASE_BODY="* [$REPO v$RELEASE_VERSION CHANGELOG](https://github.com/$OWNER/$REPO/compare/$PRIOR_VERSION...$RELEASE_VERSION)"
       deploy:
         - provider: releases
           name: $RELEASE_VERSION
@@ -101,14 +110,15 @@ jobs:
           api_key:
             secure: uibJIsO66C74yvBstlMAWaXS8wJv8P2pUOtRV43uC7eOsPeIaHYFPrDfHtVA/ChaU9gErr9u58b+bo2RE3BoT29fk14TGK6k/jSvmWIDkj/i+2rvQS43dWEepqisO5CddTEWPNNpbWFtIeVO3D6ybtIfRmbpaZ41z4Aj84hzZGG8/4JCdVYh1w68EcDz67FGes1QLCStvQR2SsTiHAyzTCZ2CnukqGZtJhd7M9uqKCjdkk4NW+X7SWbMTWGXfFrpIL2C16NbJ7jfu0vASvPUr5dQpsUbrg5JjeSdVKDl71mwh9CKHXNh52HBrzkU+ct9/sXWMea1IKofOZBrPcMDEDhaOHEmb/LRSQqAH0YEM9JjdvXNQuIQQ7VmpwJNqmPRuI5p5GrWI7biBMfgJTs5uhRTPM8GdHejVcvUmsb1NY7SKYI2HiWwhTWpk83/Hs8hR5dViTi5O4frw9CGwzR8h22ufrV8GHNX2cYKQJoHHaE97Z+FadRBWASXc6fKGWjt4MW5SUqlC64YRhQFAL1wzFKV59V2jHfTBHR9Qfz8lS2SB5PZwQmO7z1dW9/ttdiAanHnDl7SVgVFQv5hNWRZk4lvL1/M86LZSwjX8WPmlS5KhZsgKwsR7s3DdFr4Am2+mjyHirW+GJtJLIic2wPJAjGuOBkEx7uJmIsRzf5GOus=
           on:
-            branch: master
+            branch: $RELEASE_BRANCH
+            condition: '"$PRIOR_VERSION" != "$RELEASE_VERSION"'
     - stage: deploy
-      if: tag is present AND repo = plus3it/pyppyn
+      if: tag is present
       python: 3.6
-      install:
-        - echo "Install"
-      script:
-        - echo "Script"
+      env:
+        - JOB="Deploy to PyPI"
+      install: skip
+      script: skip
       deploy:
           - provider: pypi
             distributions: sdist bdist_wheel
