@@ -2,11 +2,11 @@
 Pyppyn
 ======
 
-.. image:: https://img.shields.io/github/license/YakDriver/pyppyn.svg
+.. image:: https://img.shields.io/github/license/plus3it/pyppyn.svg
     :target: ./LICENSE
     :alt: License
-.. image:: https://travis-ci.org/YakDriver/pyppyn.svg?branch=master
-    :target: http://travis-ci.org/YakDriver/pyppyn
+.. image:: https://travis-ci.org/plus3it/pyppyn.svg?branch=master
+    :target: http://travis-ci.org/plus3it/pyppyn
     :alt: Build Status
 .. image:: https://img.shields.io/pypi/pyversions/pyppyn.svg
     :target: https://pypi.python.org/pypi/pyppyn
@@ -20,7 +20,7 @@ Pyppyn helps you dynamically read setup configurations and load dependencies.
 Since ``pip`` is excellent at reading setup configurations and loading dependencies, why Pyppyn?
 If you need programmatic access to dependency information, for
 example, in dynamically creating standalone
-applications using `GravityBee <https://github.com/YakDriver/gravitybee>`_ and `PyInstaller <http://www.pyinstaller.org>`_, Pyppyn can help you out.
+applications using `GravityBee <https://github.com/plus3it/gravitybee>`_ and `PyInstaller <http://www.pyinstaller.org>`_, Pyppyn can help you out.
 
 Pyppyn can be used in scripts or using the CLI. Either way, it can be
 installed easily.
@@ -100,9 +100,9 @@ This is a sample usage of Pyppyn from a Python script.
 Contribute
 ==========
 
-``Pyppyn`` is hosted on `GitHub <http://github.com/YakDriver/pyppyn>`_ and is an open source project that welcomes contributions of all kinds from the community.
+``Pyppyn`` is hosted on `GitHub <http://github.com/plus3it/pyppyn>`_ and is an open source project that welcomes contributions of all kinds from the community.
 
-For more information about contributing, see `the contributor guidelines <https://github.com/YakDriver/pyppyn/CONTRIBUTING.rst>`_.
+For more information about contributing, see `the contributor guidelines <CONTRIBUTING.md>`_.
 
 Namesake
 ========

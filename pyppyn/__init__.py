@@ -37,7 +37,7 @@ import sys
 import uuid
 import zipfile
 
-__version__ = "0.3.8"
+__version__ = "0.3.9"
 
 __EXITOKAY__ = 0
 

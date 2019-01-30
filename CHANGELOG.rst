@@ -1,6 +1,11 @@
 CHANGE LOG
 ==========
 
+0.3.9 - 2019.01.29
+------------------
+* [ENHANCEMENT] Minor cleanup.
+* [ENHANCEMENT] Transfer to Plus3IT.
+
 0.3.8 - 2019.01.24
 ------------------
 * [ENHANCEMENT] Restructure Travis CI linting, testing, deploying so
@@ -32,8 +37,8 @@ CHANGE LOG
 
 0.3.3 - 2018.05.07
 ------------------
-* [ENHANCEMENT] Integrate with `Satsuki <https://github.com/YakDriver/satsuki>`_ to simplify the release process.
-* [ENHANCEMENT] Integrate with `GravityBee <https://github.com/YakDriver/gravitybee>`_ to create standalone
+* [ENHANCEMENT] Integrate with `Satsuki <https://github.com/plus3it/satsuki>`_ to simplify the release process.
+* [ENHANCEMENT] Integrate with `GravityBee <https://github.com/plus3it/gravitybee>`_ to create standalone
   executables for platforms.
 
 0.3.2 - 2018.04.26
