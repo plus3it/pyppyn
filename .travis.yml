@@ -10,7 +10,7 @@ python:
 
 env:
   global:
-    - REPO="${TRAVIS_REPO_SLUG#*/}"
+    - THIS_REPO="${TRAVIS_REPO_SLUG#*/}"
     - OWNER=plus3it
     - RELEASE_BRANCH=master
     - RELEASE_VERSION=$(grep -E '^current_version' $TRAVIS_BUILD_DIR/.bumpversion.cfg | sed 's/^.*= //')
@@ -72,13 +72,13 @@ jobs:
           - /usr/local/Homebrew/Library/Taps
           - $HOME/.cache/pip
     - stage: deploy
-      if: branch = env(RELEASE_BRANCH) AND type != pull_request AND repo = concat(env(OWNER), "/", env(REPO))
+      if: branch = env(RELEASE_BRANCH) AND type != pull_request AND repo = concat(env(OWNER),/,env(THIS_REPO))
       python: 3.6
       env:
         - JOB="Deploy to Test PyPI"
       install: skip
       script:
-        - sed -i -E "s/^(__version__ = \")(.*)\"/\1\2.$TRAVIS_BUILD_NUMBER\"/" $TRAVIS_BUILD_DIR/$REPO/__init__.py
+        - sed -i -E "s/^(__version__ = \")(.*)\"/\1\2.$TRAVIS_BUILD_NUMBER\"/" $TRAVIS_BUILD_DIR/$THIS_REPO/__init__.py
       deploy:
         - provider: pypi
           server: https://test.pypi.org/legacy/
@@ -92,11 +92,11 @@ jobs:
             branch: $RELEASE_BRANCH
             condition: '"$PRIOR_VERSION" = "$RELEASE_VERSION"'
     - stage: deploy
-      if: branch = env(RELEASE_BRANCH) AND type != pull_request AND repo = concat(env(OWNER), "/", env(REPO))
+      if: branch = env(RELEASE_BRANCH) AND type != pull_request AND repo = concat(env(OWNER),/,env(THIS_REPO))
       python: 3.6
       env:
         - JOB="Deploy to GitHub Releases"
-        - RELEASE_BODY="* [$REPO v$RELEASE_VERSION CHANGELOG](https://github.com/$OWNER/$REPO/compare/$PRIOR_VERSION...$RELEASE_VERSION)"
+        - RELEASE_BODY="* [$THIS_REPO v$RELEASE_VERSION CHANGELOG](https://github.com/$OWNER/$THIS_REPO/compare/$PRIOR_VERSION...$RELEASE_VERSION)"
       install: skip
       script:
         - echo RELEASE_BODY=$RELEASE_BODY 
