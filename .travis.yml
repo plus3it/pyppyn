@@ -72,7 +72,7 @@ jobs:
           - /usr/local/Homebrew/Library/Taps
           - $HOME/.cache/pip
     - stage: deploy
-      if: branch = env(RELEASE_BRANCH) AND type != pull_request AND repo = concat(env(OWNER),/,env(THIS_REPO))
+      if: branch = env(RELEASE_BRANCH) AND type != pull_request
       python: 3.6
       env:
         - JOB="Deploy to Test PyPI"
@@ -92,7 +92,7 @@ jobs:
             branch: $RELEASE_BRANCH
             condition: '"$PRIOR_VERSION" = "$RELEASE_VERSION"'
     - stage: deploy
-      if: branch = env(RELEASE_BRANCH) AND type != pull_request AND repo = concat(env(OWNER),/,env(THIS_REPO))
+      if: branch = env(RELEASE_BRANCH) AND type != pull_request
       python: 3.6
       env:
         - JOB="Deploy to GitHub Releases"
