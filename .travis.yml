@@ -72,7 +72,7 @@ jobs:
           - /usr/local/Homebrew/Library/Taps
           - $HOME/.cache/pip
     - stage: deploy
-      if: branch = env(RELEASE_BRANCH) AND type != pull_request
+      if: branch = env(RELEASE_BRANCH) AND type != pull_request AND repo = concat(env(OWNER), "/", env(REPO))
       python: 3.6
       env:
         - JOB="Deploy to Test PyPI"
@@ -92,23 +92,23 @@ jobs:
             branch: $RELEASE_BRANCH
             condition: '"$PRIOR_VERSION" = "$RELEASE_VERSION"'
     - stage: deploy
-      if: branch = env(RELEASE_BRANCH) AND type != pull_request
+      if: branch = env(RELEASE_BRANCH) AND type != pull_request AND repo = concat(env(OWNER), "/", env(REPO))
       python: 3.6
       env:
         - JOB="Deploy to GitHub Releases"
+        - RELEASE_BODY="* [$REPO v$RELEASE_VERSION CHANGELOG](https://github.com/$OWNER/$REPO/compare/$PRIOR_VERSION...$RELEASE_VERSION)"
       install: skip
       script:
-        - echo RELEASE_BODY="* [$REPO v$RELEASE_VERSION CHANGELOG](https://github.com/$OWNER/$REPO/compare/$PRIOR_VERSION...$RELEASE_VERSION)"
+        - echo RELEASE_BODY=$RELEASE_BODY 
       deploy:
         - provider: releases
+          api_key:
+            secure: uibJIsO66C74yvBstlMAWaXS8wJv8P2pUOtRV43uC7eOsPeIaHYFPrDfHtVA/ChaU9gErr9u58b+bo2RE3BoT29fk14TGK6k/jSvmWIDkj/i+2rvQS43dWEepqisO5CddTEWPNNpbWFtIeVO3D6ybtIfRmbpaZ41z4Aj84hzZGG8/4JCdVYh1w68EcDz67FGes1QLCStvQR2SsTiHAyzTCZ2CnukqGZtJhd7M9uqKCjdkk4NW+X7SWbMTWGXfFrpIL2C16NbJ7jfu0vASvPUr5dQpsUbrg5JjeSdVKDl71mwh9CKHXNh52HBrzkU+ct9/sXWMea1IKofOZBrPcMDEDhaOHEmb/LRSQqAH0YEM9JjdvXNQuIQQ7VmpwJNqmPRuI5p5GrWI7biBMfgJTs5uhRTPM8GdHejVcvUmsb1NY7SKYI2HiWwhTWpk83/Hs8hR5dViTi5O4frw9CGwzR8h22ufrV8GHNX2cYKQJoHHaE97Z+FadRBWASXc6fKGWjt4MW5SUqlC64YRhQFAL1wzFKV59V2jHfTBHR9Qfz8lS2SB5PZwQmO7z1dW9/ttdiAanHnDl7SVgVFQv5hNWRZk4lvL1/M86LZSwjX8WPmlS5KhZsgKwsR7s3DdFr4Am2+mjyHirW+GJtJLIic2wPJAjGuOBkEx7uJmIsRzf5GOus=
           name: $RELEASE_VERSION
           tag_name: $RELEASE_VERSION
           target_commitish: $TRAVIS_COMMIT
           body: $RELEASE_BODY
           draft: false
-          skip_cleanup: true
-          api_key:
-            secure: uibJIsO66C74yvBstlMAWaXS8wJv8P2pUOtRV43uC7eOsPeIaHYFPrDfHtVA/ChaU9gErr9u58b+bo2RE3BoT29fk14TGK6k/jSvmWIDkj/i+2rvQS43dWEepqisO5CddTEWPNNpbWFtIeVO3D6ybtIfRmbpaZ41z4Aj84hzZGG8/4JCdVYh1w68EcDz67FGes1QLCStvQR2SsTiHAyzTCZ2CnukqGZtJhd7M9uqKCjdkk4NW+X7SWbMTWGXfFrpIL2C16NbJ7jfu0vASvPUr5dQpsUbrg5JjeSdVKDl71mwh9CKHXNh52HBrzkU+ct9/sXWMea1IKofOZBrPcMDEDhaOHEmb/LRSQqAH0YEM9JjdvXNQuIQQ7VmpwJNqmPRuI5p5GrWI7biBMfgJTs5uhRTPM8GdHejVcvUmsb1NY7SKYI2HiWwhTWpk83/Hs8hR5dViTi5O4frw9CGwzR8h22ufrV8GHNX2cYKQJoHHaE97Z+FadRBWASXc6fKGWjt4MW5SUqlC64YRhQFAL1wzFKV59V2jHfTBHR9Qfz8lS2SB5PZwQmO7z1dW9/ttdiAanHnDl7SVgVFQv5hNWRZk4lvL1/M86LZSwjX8WPmlS5KhZsgKwsR7s3DdFr4Am2+mjyHirW+GJtJLIic2wPJAjGuOBkEx7uJmIsRzf5GOus=
           on:
             branch: $RELEASE_BRANCH
             condition: '"$PRIOR_VERSION" != "$RELEASE_VERSION"'
