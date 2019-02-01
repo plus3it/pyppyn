@@ -9,7 +9,6 @@ flake8 = "==3.6.0"
 pylint = "==2.2.2"
 
 [packages]
-distlib = "==0.2.8"
 setuptools = "==40.6.3"
 click = "==7.0"
 wheel = "==0.32.3"
