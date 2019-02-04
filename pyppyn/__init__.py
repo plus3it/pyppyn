@@ -27,9 +27,9 @@ from __future__ import (absolute_import, division, print_function,
 
 import glob
 import importlib
-import os
 import logging
 import logging.config
+import os
 import platform
 import shutil
 import subprocess
@@ -40,6 +40,7 @@ import zipfile
 __version__ = "0.3.9"
 
 __EXITOKAY__ = 0
+FILE_DIR = ".pyppyn"
 
 logging.config.fileConfig(
     os.path.join(os.path.dirname(os.path.abspath(__file__)), 'logging.conf'))
@@ -73,7 +74,6 @@ class ConfigRep():
     STATE_READ = "READ"
     STATE_LOAD = "LOAD"
     STATE_INSTALLED = "INSTALLED"
-    VERB_MESSAGE_PREFIX = "[Pyppyn]"
 
     @classmethod
     def install_package(cls, package):
@@ -155,29 +155,30 @@ class ConfigRep():
             self.install_packages()
 
     def _create_wheel(self):
-        logger.info("Building wheel from %s", self.setup_path)
         # if build and/or dist directories already exist, rename
         self._rename_end = '_' + uuid.uuid1().hex[:16]
-
         if os.path.isdir(os.path.join(self.setup_path, 'build')):
             os.rename(
                 os.path.join(self.setup_path, 'build'),
                 os.path.join(self.setup_path, 'build' + self._rename_end)
             )
-        if os.path.isdir(os.path.join(self.setup_path, 'dist')):
-            os.rename(
-                os.path.join(self.setup_path, 'dist'),
-                os.path.join(self.setup_path, 'dist' + self._rename_end)
-            )
+
+        if not os.path.isdir(os.path.join(self.setup_path, FILE_DIR)):
+            os.makedirs(os.path.join(self.setup_path, FILE_DIR))
+
+        logger.info("Building wheel from %s", self.setup_path)
 
         # actual wheel creation
-        commands = ['python', 'setup.py', 'bdist_wheel', '--universal']
-        sub_return = subprocess.run(commands, check=True)
+        commands = [
+            'python', 'setup.py', 'bdist_wheel', '--universal', '--bdist-dir',
+            os.path.join(self.setup_path, FILE_DIR, 'temp'), '--dist-dir',
+            os.path.join(self.setup_path, FILE_DIR, 'dist')]
+        sub_return = subprocess.run(commands, check=False)
         if sub_return.returncode != 0:
             logger.error("Pyppyn could not setup package. Wheel build failed!")
             raise ChildProcessError
 
-        os.chdir('dist')
+        os.chdir(os.path.join(self.setup_path, FILE_DIR, 'dist'))
 
         logger.info("Extracting wheel (unzipping)")
 
@@ -251,25 +252,19 @@ class ConfigRep():
     def _wheel_cleanup(self):
         # put back dist and build
         logger.info("Cleaning up wheel")
-        shutil.rmtree(os.path.join(self.setup_path, 'build'))
-        if os.path.isdir(os.path.join(
-                self.setup_path,
-                'build' + self._rename_end
-        )):
+
+        if os.path.isdir(os.path.join(self.setup_path, 'build')):
+            shutil.rmtree(os.path.join(self.setup_path, 'build'))
+
+        if os.path.isdir(os.path.join(self.setup_path, FILE_DIR)):
+            shutil.rmtree(os.path.join(self.setup_path, FILE_DIR))
+
+        if os.path.isdir(
+                os.path.join(self.setup_path, 'build' + self._rename_end)):
             os.rename(os.path.join(
                 self.setup_path,
                 'build' + self._rename_end
             ), os.path.join(self.setup_path, 'build'))
-
-        shutil.rmtree(os.path.join(self.setup_path, 'dist'))
-        if os.path.isdir(os.path.join(
-                self.setup_path,
-                'dist' + self._rename_end
-        )):
-            os.rename(os.path.join(
-                self.setup_path,
-                'dist' + self._rename_end
-            ), os.path.join(self.setup_path, 'dist'))
 
     def read_config(self):
         """Create wheel from the setup path given and read metadata."""
