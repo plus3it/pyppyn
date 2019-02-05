@@ -1,6 +1,10 @@
 CHANGE LOG
 ==========
 
+0.3.10 - 2019.02.05
+-------------------
+* [ENHANCEMENT] Perform work in '.pyppyn' directory.
+
 0.3.9 - 2019.01.29
 ------------------
 * [ENHANCEMENT] Minor cleanup.
