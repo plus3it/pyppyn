@@ -14,6 +14,9 @@ Pyppyn
 .. image:: https://img.shields.io/pypi/v/pyppyn.svg
     :target: https://pypi.python.org/pypi/pyppyn
     :alt: Version
+.. image:: https://pullreminders.com/badge.svg
+    :target: https://pullreminders.com?ref=badge
+    :alt: Pull Reminder
 
 Pyppyn helps you dynamically read setup configurations and load dependencies.
 
