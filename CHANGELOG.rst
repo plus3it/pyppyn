@@ -1,6 +1,14 @@
 CHANGE LOG
 ==========
 
+0.3.12 - 2020.01.14
+-------------------
+* [ENHANCEMENT] Update dependencies.
+
+0.3.11 - 2019.05.06
+-------------------
+* [ENHANCEMENT] Update dependencies.
+
 0.3.10 - 2019.02.05
 -------------------
 * [ENHANCEMENT] Perform work in '.pyppyn' directory.
