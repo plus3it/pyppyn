@@ -1,6 +1,10 @@
 CHANGE LOG
 ==========
 
+0.3.17 - 2020.02.27
+-------------------
+* [FIX] Remove standard packages from setup.cfg install requires.
+
 0.3.13 - 2020.01.15
 -------------------
 * [ENHANCEMENT] Remove pipenv files, update setup.cfg dependencies.
