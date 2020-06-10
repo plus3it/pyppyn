@@ -40,7 +40,7 @@ jobs:
         - flake8
     - stage: test
       python: 3.7
-      dist: xenial
+      dist: bionic
     - stage: test
       os: windows
       language: shell
