@@ -1,3 +1,6 @@
+-r ./test.txt
+-r ./install.txt
+
 flake8==3.8.4
 pylint==2.6.0
 black==20.8b1

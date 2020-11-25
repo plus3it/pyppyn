@@ -9,7 +9,7 @@ pr:
 
 variables:
   pythonVersion: 3.7
-  venvDirectory: $(System.DefaultWorkingDirectory)\venv
+  venvDirectory: $(System.DefaultWorkingDirectory)/venv
 
 jobs:
 - job: test
@@ -28,10 +28,11 @@ jobs:
       python -m virtualenv $(venvDirectory)
     displayName: setup virtual environment
   - script: |
-      call $(venvDirectory)\Scripts\activate.bat
+      call $(venvDirectory)/Scripts/activate.bat
       python -m pip list
-      python -m pip install -r requirements\pip.txt
-      python -m pip install -r requirements\test.txt
+      python -m pip install -r requirements/pip.txt
+      python -m pip install -r requirements/test.txt
+      python -m pip install -r requirements/install.txt
       python -m pip install --editable .
       python -m pip list
       pytest

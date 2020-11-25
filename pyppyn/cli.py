@@ -17,7 +17,11 @@ import pyppyn
 click.disable_unicode_literals_warning = True
 
 
-@click.command(context_settings=dict(ignore_unknown_options=True,))
+@click.command(
+    context_settings=dict(
+        ignore_unknown_options=True,
+    )
+)
 @click.version_option(version=pyppyn.__version__)
 @click.option(
     "--setup-path",
