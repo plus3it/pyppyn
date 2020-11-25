@@ -52,11 +52,13 @@ jobs:
         - cd $HOME
         - virtualenv venv
         - source venv/Scripts/activate
+        - python -m pip list
         - cd $startingdir
       install:
         - python -m pip install -r requirements/pip.txt
         - python -m pip install -r requirements/test.txt
-        - pip install --editable .
+        - python -m pip install --editable .
+        - python -m pip list
     - stage: test
       os: osx
       osx_image: xcode10.1

@@ -136,6 +136,7 @@ class ConfigRep():
 
         # system
         self.python_version = sys.version_info[0] + (sys.version_info[1] / 10)
+        self.python = sys.executable
 
         # requirements
         self.reqs = {
@@ -170,7 +171,7 @@ class ConfigRep():
 
         # actual wheel creation
         commands = [
-            'python', 'setup.py', 'bdist_wheel', '--universal', '--bdist-dir',
+            self.python, 'setup.py', 'bdist_wheel', '--universal', '--bdist-dir',
             os.path.join(self.setup_path, FILE_DIR, 'temp'), '--dist-dir',
             os.path.join(self.setup_path, FILE_DIR, 'dist')]
         sub_return = subprocess.run(commands, check=False)
