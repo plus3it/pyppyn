@@ -7,65 +7,32 @@ pr:
     include:
     - master
 
-jobs:
-- template: ci/azure-pipelines-template.yml
-  parameters:
-    tox_version: ''
-    jobs:
-      py37_64:
-        image: [win19]
-        architecture: x64
-        py: "3.7"
+variables:
+  pythonVersion: 3.7
+  venvDirectory: $(System.DefaultWorkingDirectory)\venv
 
-- job: build
-  displayName: build standalone
-  dependsOn:
-  - py37_64
-  - py37_32
-  - py36_64
-  - py27_64
-  condition: succeeded()
+jobs:
+- job: test
+  displayName: test
   pool:
     vmImage: 'vs2017-win2016'
-  variables:
-    py: "3.7"
-    architecture: "x64"
-    venv: $(System.DefaultWorkingDirectory)\venv
-    artifactDirFull: $(System.DefaultWorkingDirectory)\$(artifactDir)
   steps:
-  - checkout: self
-    displayName: checkout source code (with submodules)
-    submodules: true
   - task: UsePythonVersion@0
-    displayName: ${{ format('provision build python {0} ({1})', variables.py, variables.architecture) }}
+    displayName: Use Python $(pythonVersion)
     inputs:
-      versionSpec: $(py)
-      architecture: $(architecture)
-    name: buildPython
-  - script: $(buildPython.pythonLocation)\python -m pip install -r requirements/basics.txt
-    displayName: install python basics
+      versionSpec: $(pythonVersion)
+  - script: python -m pip install -r requirements/ci.txt
+    displayName: install python requirements/ci.txt
   - script: |
-      mkdir $(venv)
-      $(buildPython.pythonLocation)\python -m virtualenv $(venv)
+      mkdir $(venvDirectory)
+      python -m virtualenv $(venvDirectory)
     displayName: setup virtual environment
-  - ${{ if eq(variables['build.sourceBranch'], 'refs/heads/develop') }}:
-    - powershell: |
-        $ver = (git show -s --format=%cd --date=format:'%Y%m%d%H%M%S')
-        (Get-Content setup.cfg) -replace '^(version = )(\d+\.\d+\.\d+).*$', ('$1$2.dev' + $ver) | Set-Content setup.cfg
-      displayName: mark the version as development
   - script: |
-      call $(venv)\Scripts\activate.bat
+      call $(venvDirectory)\Scripts\activate.bat
+      python -m pip list
       python -m pip install -r requirements\pip.txt
-      python -m pip install -r requirements\build.txt
-      pip install --editable .
-      gravitybee --src-dir src --sha file --with-latest --extra-data static --extra-pkgs boto3 --extra-modules boto3
-    displayName: create standalone application
-  - script: move requirements\deploy.txt $(artifactDirFull)
-    displayName: include requirements.txt for deploy
-  - script: dir $(artifactDirFull)
-    displayName: see directory
-  - task: PublishBuildArtifacts@1
-    inputs:
-      pathtoPublish: $(artifactDirFull)
-      artifactName: $(artifactDir)
-    displayName: publish standalone artifacts
+      python -m pip install -r requirements\test.txt
+      python -m pip install --editable .
+      python -m pip list
+      pytest
+    displayName: run pytest
