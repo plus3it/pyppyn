@@ -12,10 +12,10 @@ env:
   global:
     - THIS_REPO="${TRAVIS_REPO_SLUG#*/}"
     - OWNER=plus3it
-    - RELEASE_BRANCH=master
     - RELEASE_VERSION=$(grep -E '^current_version' $TRAVIS_BUILD_DIR/.bumpversion.cfg | sed 's/^.*= //')
     - PRIOR_VERSION=$(git describe --abbrev=0 --tags)
 
+if: branch = master OR type = pull_request
 stage: test
 cache: pip
 before_cache:
@@ -76,7 +76,7 @@ jobs:
           - /usr/local/Homebrew/Library/Taps
           - $HOME/.cache/pip
     - stage: deploy
-      if: branch = env(RELEASE_BRANCH) AND type != pull_request
+      if: branch = master AND type != pull_request
       python: 3.6
       env:
         - JOB="Deploy to Test PyPI"
@@ -93,10 +93,10 @@ jobs:
           skip_cleanup: true
           skip_upload_docs: true
           on:
-            branch: $RELEASE_BRANCH
+            branch: master
             condition: '"$PRIOR_VERSION" = "$RELEASE_VERSION"'
     - stage: deploy
-      if: branch = env(RELEASE_BRANCH) AND type != pull_request
+      if: branch = master AND type != pull_request
       python: 3.6
       env:
         - JOB="Deploy to GitHub Releases"
@@ -114,7 +114,7 @@ jobs:
           body: $RELEASE_BODY
           draft: false
           on:
-            branch: $RELEASE_BRANCH
+            branch: master
             condition: '"$PRIOR_VERSION" != "$RELEASE_VERSION"'
     - stage: deploy
       if: tag is present
