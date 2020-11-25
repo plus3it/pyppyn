@@ -1,8 +1,13 @@
 # -*- coding: utf-8 -*-
 # pylint: disable=redefined-outer-name
 """pyppyn test script."""
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals, with_statement)
+from __future__ import (
+    absolute_import,
+    division,
+    print_function,
+    unicode_literals,
+    with_statement,
+)
 
 import platform
 
@@ -32,8 +37,10 @@ def configrep():
 def test_app_name_version(configrep):
     """Test reading the config file."""
     configrep.load_config()
-    assert configrep.config['app_name'] == "minipippy" \
-        and configrep.config['app_version'] == "4.8.2"
+    assert (
+        configrep.config["app_name"] == "minipippy"
+        and configrep.config["app_version"] == "4.8.2"
+    )
 
 
 def test_read_cfg_file(configrep):
@@ -61,14 +68,14 @@ def test_process_config(configrep):
 
 def test_get_required(configrep):
     """Test getting list of requirements."""
-    if platform.system().lower() == 'windows':
+    if platform.system().lower() == "windows":
         assert set(configrep.get_required()) == set(
-            ['backoff', 'click', 'pyyaml', 'defusedxml', 'pypiwin32', 'six']
+            ["backoff", "click", "pyyaml", "defusedxml", "pypiwin32", "six"]
         )
     else:
-        assert set(
-            configrep.get_required()
-        ) == set(['backoff', 'click', 'six', 'pyyaml'])
+        assert set(configrep.get_required()) == set(
+            ["backoff", "click", "six", "pyyaml"]
+        )
 
 
 def test_install_package():
@@ -78,11 +85,9 @@ def test_install_package():
 
 def test_get_config_attr(configrep):
     """Test getting an attribute from the configuration."""
-    assert configrep.get_config_attr('packages') == "minipippy"
+    assert configrep.get_config_attr("packages") == "minipippy"
 
 
 def test_get_config_list(configrep):
     """Test getting a list from the configuration."""
-    assert set(
-        configrep.get_config_list('platform')
-    ) == set(['Linux', 'Windows'])
+    assert set(configrep.get_config_list("platform")) == set(["Linux", "Windows"])

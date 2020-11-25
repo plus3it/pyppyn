@@ -34,6 +34,7 @@ jobs:
         - pip install -r requirements/lint.txt
         - pip install --editable .
       script:
+        - black --check .
         - pylint pyppyn
         - pylint tests/*py
         - flake8
