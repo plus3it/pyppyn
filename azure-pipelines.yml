@@ -1,0 +1,39 @@
+trigger:
+  branches:
+    include:
+    - master
+pr:
+  branches:
+    include:
+    - master
+
+variables:
+  pythonVersion: 3.7
+  venvDirectory: $(System.DefaultWorkingDirectory)/venv
+
+jobs:
+- job: test
+  displayName: test
+  pool:
+    vmImage: 'vs2017-win2016'
+  steps:
+  - task: UsePythonVersion@0
+    displayName: Use Python $(pythonVersion)
+    inputs:
+      versionSpec: $(pythonVersion)
+  - script: python -m pip install -r requirements/ci.txt
+    displayName: install python requirements/ci.txt
+  - script: |
+      mkdir $(venvDirectory)
+      python -m virtualenv $(venvDirectory)
+    displayName: setup virtual environment
+  - script: |
+      call $(venvDirectory)/Scripts/activate.bat
+      python -m pip list
+      python -m pip install -r requirements/pip.txt
+      python -m pip install -r requirements/test.txt
+      python -m pip install -r requirements/install.txt
+      python -m pip install --editable .
+      python -m pip list
+      pytest
+    displayName: run pytest

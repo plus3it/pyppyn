@@ -1,3 +1,4 @@
+version: ~> 1.0
 language: python
 stages:
   - lint
@@ -12,55 +13,40 @@ env:
   global:
     - THIS_REPO="${TRAVIS_REPO_SLUG#*/}"
     - OWNER=plus3it
-    - RELEASE_BRANCH=master
     - RELEASE_VERSION=$(grep -E '^current_version' $TRAVIS_BUILD_DIR/.bumpversion.cfg | sed 's/^.*= //')
     - PRIOR_VERSION=$(git describe --abbrev=0 --tags)
 
-stage: test
+if: branch = master OR type = pull_request
 cache: pip
 before_cache:
   - rm -f $HOME/.cache/pip/log/debug.log
 install:
-  - pip install -r requirements/pip.txt
-  - pip install -r requirements/test.txt
-  - pip install --editable .
+  - python -m pip install -r requirements/pip.txt
+  - python -m pip install -r requirements/test.txt
+  - python -m pip install -r requirements/install.txt
+  - python -m pip install --editable .
 script:
   - pytest
 jobs:
   include:
     - stage: lint
-      python: 3.6
+      python: 3.7
       install:
-        - pip install -r requirements/pip.txt
-        - pip install -r requirements/lint.txt
-        - pip install --editable .
+        - python -m pip install -r requirements/pip.txt
+        - python -m pip install -r requirements/lint.txt
+        - python -m pip install --editable .
       script:
+        - black --check .
         - pylint pyppyn
-        - pylint tests/*py
+        - pylint tests/*.py
         - flake8
     - stage: test
       python: 3.7
       dist: bionic
     - stage: test
-      os: windows
-      language: shell
-      env: PATH=/c/Python37:/c/Python37/Scripts:$PATH
-      before_install:
-        - choco install python --version 3.7.4
-        - python -m pip install -r requirements/ci.txt
-        - startingdir=$(pwd)
-        - cd $HOME
-        - virtualenv venv
-        - source venv/Scripts/activate
-        - cd $startingdir
-      install:
-        - python -m pip install -r requirements/pip.txt
-        - python -m pip install -r requirements/test.txt
-        - pip install --editable .
-    - stage: test
       os: osx
       osx_image: xcode10.1
-      language: sh
+      language: shell
       python: 3.7
       # Perform the manual steps on osx to install python3 and activate venv
       before_install:
@@ -74,7 +60,7 @@ jobs:
           - /usr/local/Homebrew/Library/Taps
           - $HOME/.cache/pip
     - stage: deploy
-      if: branch = env(RELEASE_BRANCH) AND type != pull_request
+      if: branch = master AND type != pull_request
       python: 3.6
       env:
         - JOB="Deploy to Test PyPI"
@@ -85,16 +71,16 @@ jobs:
         - provider: pypi
           server: https://test.pypi.org/legacy/
           distributions: sdist bdist_wheel
-          user: plus3it
+          username: plus3it
           password:
             secure: Ms9MADWwUuFpiHv2ee2cyEu04k7NLGgiywcGWVEFMOZdfE8BW6xD9oBMyISY7mkqO1Z5o7qyLbPuFNqhJVXnIX5IuqDiMvd0SViR9AmvErhanM68Iarwz5zT6gQt5V3QEeIdgTIyVCcR5jikUyhhE/HUsXeyD2RKk+pVk8wWbfaPXquho03ztNh1PnE7s2W2mex5oTxYA8IFMY8xBtGMdXkPusrZmaBN3GU8RUoATsI1tvyPN6ydMjXDCzCCWNlMdMn8i6FmsJo7m6G8y+E3CNBIj3qUbe2ZwNO89unuvuwRJ3Deah45dvT6MkqQgJ74l6IAzv6PtQGBrcC1xTsNohUfgTViJTday4zc26e1I0Cm9r4C1Ba6eMTioYFoKxL/F8cGLalh1o1+G9wZfbuWnVSMkFpdD8LHIR1Ssd3dINc9+ELZUTRehLzjqBEecienunNTckBhARoAMzfwWGSJG35qGF6UjnJMm1s1O+oOLarKTde2ydD9KRVosw05Kq5IlHAoVVxXJwv33K0+JTDKjgTfIIGz0H8gdsxoufSTDwRIk+PEwftlkU8e5hnwnmPFkRI8w4lHwTVt5SVxpPpwBjbUpPXA5w7YYSV6MPQFTlOJlEGDlCrCHCthwWft6pKA7iNBoLuavYrW7FvTKXlrFxidFJWQ0EpGx1abZpNUCfo=
-          skip_cleanup: true
-          skip_upload_docs: true
+          cleanup: false
+          upload_docs: false
           on:
-            branch: $RELEASE_BRANCH
+            branch: master
             condition: '"$PRIOR_VERSION" = "$RELEASE_VERSION"'
     - stage: deploy
-      if: branch = env(RELEASE_BRANCH) AND type != pull_request
+      if: branch = master AND type != pull_request
       python: 3.6
       env:
         - JOB="Deploy to GitHub Releases"
@@ -104,15 +90,15 @@ jobs:
         - echo RELEASE_BODY=$RELEASE_BODY
       deploy:
         - provider: releases
-          api_key:
+          token:
             secure: uibJIsO66C74yvBstlMAWaXS8wJv8P2pUOtRV43uC7eOsPeIaHYFPrDfHtVA/ChaU9gErr9u58b+bo2RE3BoT29fk14TGK6k/jSvmWIDkj/i+2rvQS43dWEepqisO5CddTEWPNNpbWFtIeVO3D6ybtIfRmbpaZ41z4Aj84hzZGG8/4JCdVYh1w68EcDz67FGes1QLCStvQR2SsTiHAyzTCZ2CnukqGZtJhd7M9uqKCjdkk4NW+X7SWbMTWGXfFrpIL2C16NbJ7jfu0vASvPUr5dQpsUbrg5JjeSdVKDl71mwh9CKHXNh52HBrzkU+ct9/sXWMea1IKofOZBrPcMDEDhaOHEmb/LRSQqAH0YEM9JjdvXNQuIQQ7VmpwJNqmPRuI5p5GrWI7biBMfgJTs5uhRTPM8GdHejVcvUmsb1NY7SKYI2HiWwhTWpk83/Hs8hR5dViTi5O4frw9CGwzR8h22ufrV8GHNX2cYKQJoHHaE97Z+FadRBWASXc6fKGWjt4MW5SUqlC64YRhQFAL1wzFKV59V2jHfTBHR9Qfz8lS2SB5PZwQmO7z1dW9/ttdiAanHnDl7SVgVFQv5hNWRZk4lvL1/M86LZSwjX8WPmlS5KhZsgKwsR7s3DdFr4Am2+mjyHirW+GJtJLIic2wPJAjGuOBkEx7uJmIsRzf5GOus=
           name: $RELEASE_VERSION
           tag_name: $RELEASE_VERSION
           target_commitish: $TRAVIS_COMMIT
-          body: $RELEASE_BODY
+          release_notes: $RELEASE_BODY
           draft: false
           on:
-            branch: $RELEASE_BRANCH
+            branch: master
             condition: '"$PRIOR_VERSION" != "$RELEASE_VERSION"'
     - stage: deploy
       if: tag is present
@@ -124,9 +110,9 @@ jobs:
       deploy:
           - provider: pypi
             distributions: sdist bdist_wheel
-            user: plus3it
+            username: plus3it
             password:
               secure: Hs9i6TQH4uqyGdnMRRoywaTbM589SIVQtgQtrdNdE0SYw7JoFKVI/AwEqjDyjsfrOLaqnl8LQ3yfNZDrW5thioj1r7MWjDOR7Cm0NwTcuHkrVE3CjVXBPE2TmevHFN59H/7TOLBW6SzQ8Wo6+9c71BAxR4agQncpq2eCoJZoepMAcfBPHpaZpExSXkH/vn5gXONfGMJaEcKU4hlP2syeyvuvCsMhHCAPr+iLTf2Lg+eWwldWnVJoZcd0u23wH01j3IZshu6HWSohMb3wAJLhjT4q7JMRD1tui600DViFdrxPQ3FSitY+ucSUZWUwX8XOtKckAlLrGIdytFkkD5j/PtIChV5cbT7peglxYuuAXKNLb0WTkJ1K6B8vgSgvs+v1dRZni3+OsUaJbnuOq8vNhgNQ4H0wUGYZDts3j7Dh2Th48Mxgt/Ebc2OToeHB81TaGSgWd0+xNQ3ewWOFdlcWjOwcsuY7xz674uD/Ocb/uq6VthX+ES0xo0QEO7PyapUwx0dpNaZDLd1azFYyY14xDGTxX3oTBGU/HOMB5ozAIap/DWswlMmOcPJ/jzK1scH49ba145PTKZ+Ln5/Ib6luOYHoNySmFyHZ3jgBk1qCUhCmnRFk4HUjRDQBjXNkr6SRXtQrbkVPOh4YXmQ+eYLP5fPip48Qv7GCNpN6ZBftwVQ=
-            skip_upload_docs: true
+            upload_docs: false
             on:
               tags: true

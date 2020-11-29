@@ -22,8 +22,13 @@ Example:
 
         $ pyppyn --help
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals, with_statement)
+from __future__ import (
+    absolute_import,
+    division,
+    print_function,
+    unicode_literals,
+    with_statement,
+)
 
 import glob
 import importlib
@@ -43,11 +48,12 @@ __EXITOKAY__ = 0
 FILE_DIR = ".pyppyn"
 
 logging.config.fileConfig(
-    os.path.join(os.path.dirname(os.path.abspath(__file__)), 'logging.conf'))
-logger = logging.getLogger(__name__)        # pylint: disable=invalid-name
+    os.path.join(os.path.dirname(os.path.abspath(__file__)), "logging.conf")
+)
+logger = logging.getLogger(__name__)  # pylint: disable=invalid-name
 
 
-class ConfigRep():
+class ConfigRep:
     """Utility for reading setup.cfg and installing dependencies.
 
     This class helps find packages that must be installed as
@@ -87,7 +93,7 @@ class ConfigRep():
 
         """
         success = subprocess.check_call(
-            [sys.executable, '-m', 'pip', 'install', package]
+            [sys.executable, "-m", "pip", "install", package]
         )
 
         if success != 0:
@@ -117,13 +123,13 @@ class ConfigRep():
     def __init__(self, **kwargs):
         """Instantiate."""
         self._status = {}
-        self._status['should_load'] = 0
-        self._status['did_load'] = 0
-        self._status['state'] = ConfigRep.STATE_INIT
+        self._status["should_load"] = 0
+        self._status["did_load"] = 0
+        self._status["state"] = ConfigRep.STATE_INIT
 
         # Initial values
-        self.setup_path = kwargs.get('setup_path', ".")
-        self.platform = kwargs.get('platform', platform.system()).lower()
+        self.setup_path = kwargs.get("setup_path", ".")
+        self.platform = kwargs.get("platform", platform.system()).lower()
 
         # Logging
         logger.info("Platform: %s", self.platform)
@@ -131,36 +137,29 @@ class ConfigRep():
 
         # will hold configuration attributes
         self.config = {}
-        self.config['app_name'] = None
-        self.config['app_version'] = None
+        self.config["app_name"] = None
+        self.config["app_version"] = None
 
         # system
         self.python_version = sys.version_info[0] + (sys.version_info[1] / 10)
 
         # requirements
-        self.reqs = {
-            'os': [],
-            'other': [],
-            'base': [],
-            'python': [],
-            'unparsed': []}
+        self.reqs = {"os": [], "other": [], "base": [], "python": [], "unparsed": []}
 
         # suffix for renaming build/dist directories
         self._rename_end = None
 
     def process_config(self):
         """Perform all steps with one call."""
-        return self.read_config() and \
-            self.load_config() and \
-            self.install_packages()
+        return self.read_config() and self.load_config() and self.install_packages()
 
     def _create_wheel(self):
         # if build and/or dist directories already exist, rename
-        self._rename_end = '_' + uuid.uuid1().hex[:16]
-        if os.path.isdir(os.path.join(self.setup_path, 'build')):
+        self._rename_end = "_" + uuid.uuid1().hex[:16]
+        if os.path.isdir(os.path.join(self.setup_path, "build")):
             os.rename(
-                os.path.join(self.setup_path, 'build'),
-                os.path.join(self.setup_path, 'build' + self._rename_end)
+                os.path.join(self.setup_path, "build"),
+                os.path.join(self.setup_path, "build" + self._rename_end),
             )
 
         if not os.path.isdir(os.path.join(self.setup_path, FILE_DIR)):
@@ -170,26 +169,32 @@ class ConfigRep():
 
         # actual wheel creation
         commands = [
-            'python', 'setup.py', 'bdist_wheel', '--universal', '--bdist-dir',
-            os.path.join(self.setup_path, FILE_DIR, 'temp'), '--dist-dir',
-            os.path.join(self.setup_path, FILE_DIR, 'dist')]
+            sys.executable,
+            "setup.py",
+            "bdist_wheel",
+            "--universal",
+            "--bdist-dir",
+            os.path.join(self.setup_path, FILE_DIR, "temp"),
+            "--dist-dir",
+            os.path.join(self.setup_path, FILE_DIR, "dist"),
+        ]
         sub_return = subprocess.run(commands, check=False)
         if sub_return.returncode != 0:
             logger.error("Pyppyn could not setup package. Wheel build failed!")
             raise ChildProcessError
 
-        os.chdir(os.path.join(self.setup_path, FILE_DIR, 'dist'))
+        os.chdir(os.path.join(self.setup_path, FILE_DIR, "dist"))
 
         logger.info("Extracting wheel (unzipping)")
 
         wheel_file = None
 
-        for wheel_file in glob.glob(os.path.join('.', '*whl')):
+        for wheel_file in glob.glob(os.path.join(".", "*whl")):
             logger.info("Wheel archive found: %s", wheel_file)
 
         if wheel_file is not None:
             logger.info("Unzipping: %s", wheel_file)
-            zip_ref = zipfile.ZipFile(wheel_file, 'r')
+            zip_ref = zipfile.ZipFile(wheel_file, "r")
             zip_ref.extractall(ConfigRep.WHEEL_TEMP_DIR)
             zip_ref.close()
 
@@ -197,14 +202,13 @@ class ConfigRep():
         # look at directories wheel created
         logger.info("Going through wheel directories")
         self.config["packages"] = []
-        for created_file in glob.glob(os.path.join('.', '*')):
+        for created_file in glob.glob(os.path.join(".", "*")):
 
-            if not created_file.endswith('.dist-info') \
-                    and os.path.isdir(created_file):
-                if created_file.startswith('.' + os.sep):
+            if not created_file.endswith(".dist-info") and os.path.isdir(created_file):
+                if created_file.startswith("." + os.sep):
                     created_file = created_file[2:]
                 self.config["packages"].append(created_file)
-            elif created_file.endswith('.dist-info'):
+            elif created_file.endswith(".dist-info"):
                 self.config["metadata_dir"] = created_file
 
     def _wheel_top_level(self):
@@ -219,14 +223,12 @@ class ConfigRep():
         self.config["console_scripts"] = []
         console_scripts = False
         for line in ep_file:
-            if line.startswith('[console_scripts]'):
+            if line.startswith("[console_scripts]"):
                 console_scripts = True
             elif console_scripts:
-                parts = line.split(' = ')
+                parts = line.split(" = ")
                 if len(parts) > 1:
-                    self.config["console_scripts"].append(
-                        parts[0].strip()
-                    )
+                    self.config["console_scripts"].append(parts[0].strip())
 
     def _wheel_metadata(self):
         # metadata
@@ -240,7 +242,7 @@ class ConfigRep():
 
         self.config["metadata"] = {}
         for line in metadata.split("\n"):
-            parts = line.split(': ', maxsplit=1)
+            parts = line.split(": ", maxsplit=1)
             if len(parts) > 1:
                 key = parts[0].strip().lower()
                 value = parts[1].strip()
@@ -253,25 +255,24 @@ class ConfigRep():
         # put back dist and build
         logger.info("Cleaning up wheel")
 
-        if os.path.isdir(os.path.join(self.setup_path, 'build')):
-            shutil.rmtree(os.path.join(self.setup_path, 'build'))
+        if os.path.isdir(os.path.join(self.setup_path, "build")):
+            shutil.rmtree(os.path.join(self.setup_path, "build"))
 
         if os.path.isdir(os.path.join(self.setup_path, FILE_DIR)):
             shutil.rmtree(os.path.join(self.setup_path, FILE_DIR))
 
-        if os.path.isdir(
-                os.path.join(self.setup_path, 'build' + self._rename_end)):
-            os.rename(os.path.join(
-                self.setup_path,
-                'build' + self._rename_end
-            ), os.path.join(self.setup_path, 'build'))
+        if os.path.isdir(os.path.join(self.setup_path, "build" + self._rename_end)):
+            os.rename(
+                os.path.join(self.setup_path, "build" + self._rename_end),
+                os.path.join(self.setup_path, "build"),
+            )
 
     def read_config(self):
         """Create wheel from the setup path given and read metadata."""
         logger.info("Reading configuration of %s", self.setup_path)
 
         # check for existence of setup.py, required
-        if not os.path.isfile(os.path.join(self.setup_path, 'setup.py')):
+        if not os.path.isfile(os.path.join(self.setup_path, "setup.py")):
             logger.info("setup.py not found at %s", self.setup_path)
             raise FileNotFoundError
 
@@ -294,7 +295,7 @@ class ConfigRep():
         self._wheel_cleanup()
 
         # self.config = config.read_configuration(self.setup_path)
-        self._status['state'] = ConfigRep.STATE_READ
+        self._status["state"] = ConfigRep.STATE_READ
         return self.config is not None
 
     def _parse_marker(self, package=None, marker=None):
@@ -309,7 +310,7 @@ class ConfigRep():
         """
         package = package.strip()
 
-        marker_parts = marker.split(' ')
+        marker_parts = marker.split(" ")
 
         # get rid of quotes and whitespace on markers
         for i, mark_part in enumerate(marker_parts):
@@ -317,56 +318,60 @@ class ConfigRep():
 
         if len(marker_parts) != 3:
             logger.info("Unsupported marker [%s]: %s", package, marker)
-            self.reqs['unparsed'].append(package)
+            self.reqs["unparsed"].append(package)
 
-        elif marker_parts[0] == 'platform_system' \
-                and marker_parts[1] == '==' \
-                and marker_parts[2].lower() == self.platform:
-            self.reqs['os'].append(package)
+        elif (
+            marker_parts[0] == "platform_system"
+            and marker_parts[1] == "=="
+            and marker_parts[2].lower() == self.platform
+        ):
+            self.reqs["os"].append(package)
 
-        elif marker_parts[0] == 'platform_system' \
-                and marker_parts[1] == '==' \
-                and marker_parts[2].lower() != self.platform:
-            self.reqs['other'].append(package)
+        elif (
+            marker_parts[0] == "platform_system"
+            and marker_parts[1] == "=="
+            and marker_parts[2].lower() != self.platform
+        ):
+            self.reqs["other"].append(package)
 
-        elif marker_parts[0] == 'python_version':
-            if marker_parts[1] == '<' \
-                    and self.python_version < float(marker_parts[2]):
-                self.reqs['python'].append(package)
-            elif marker_parts[1] == '>' \
-                    and self.python_version > float(marker_parts[2]):
-                self.reqs['python'].append(package)
-            elif marker_parts[1] == '>=' \
-                    and self.python_version >= float(marker_parts[2]):
-                self.reqs['python'].append(package)
-            elif marker_parts[1] == '<=' \
-                    and self.python_version <= float(marker_parts[2]):
-                self.reqs['python'].append(package)
-            elif marker_parts[1] == '!=' \
-                    and self.python_version != float(marker_parts[2]):
-                self.reqs['python'].append(package)
-            elif marker_parts[1] == '==' \
-                    and self.python_version == float(marker_parts[2]):
-                self.reqs['python'].append(package)
+        elif marker_parts[0] == "python_version":
+            if marker_parts[1] == "<" and self.python_version < float(marker_parts[2]):
+                self.reqs["python"].append(package)
+            elif marker_parts[1] == ">" and self.python_version > float(
+                marker_parts[2]
+            ):
+                self.reqs["python"].append(package)
+            elif marker_parts[1] == ">=" and self.python_version >= float(
+                marker_parts[2]
+            ):
+                self.reqs["python"].append(package)
+            elif marker_parts[1] == "<=" and self.python_version <= float(
+                marker_parts[2]
+            ):
+                self.reqs["python"].append(package)
+            elif marker_parts[1] == "!=" and self.python_version != float(
+                marker_parts[2]
+            ):
+                self.reqs["python"].append(package)
+            elif marker_parts[1] == "==" and self.python_version == float(
+                marker_parts[2]
+            ):
+                self.reqs["python"].append(package)
 
         else:
-            self.reqs['unparsed'].append(package)
+            self.reqs["unparsed"].append(package)
 
     def load_config(self):
         """Load the config file into data structures."""
         # Check that config has been read
-        if self._status['state'] != ConfigRep.STATE_READ:
+        if self._status["state"] != ConfigRep.STATE_READ:
             self.read_config()
 
-        self.config['app_name'] = self.config["metadata"]["name"][0]
-        self.config['app_version'] = str(
-            self.config["metadata"]["version"][0]
-        ).lower()
+        self.config["app_name"] = self.config["metadata"]["name"][0]
+        self.config["app_version"] = str(self.config["metadata"]["version"][0]).lower()
 
         logger.info("This Python version: %s", self.python_version)
-        logger.info(
-            "Version from %s: %s", self.setup_path, self.config['app_version']
-        )
+        logger.info("Version from %s: %s", self.setup_path, self.config["app_version"])
 
         # Parsing some (but not all) possible markers.
         # Compound markers (e.g., 'platform_system == "Windows" and
@@ -376,61 +381,69 @@ class ConfigRep():
 
         for req in self.config["metadata"]["requires-dist"]:
 
-            parts = req.lower().split('; ')
+            parts = req.lower().split("; ")
             if len(parts) > 1:
 
                 # marker present
                 self._parse_marker(package=parts[0], marker=parts[1])
 
             else:
-                self.reqs['base'].append(req.lower())
+                self.reqs["base"].append(req.lower())
 
         logger.info("Install Requires:")
-        logger.info("\tGenerally required: %s", self.reqs['base'])
-        logger.info("\tFor this OS: %s", self.reqs['os'])
-        logger.info("\tFor this Python version: %s", self.reqs['python'])
-        logger.info("\tUnparsed markers: %s", self.reqs['unparsed'])
+        logger.info("\tGenerally required: %s", self.reqs["base"])
+        logger.info("\tFor this OS: %s", self.reqs["os"])
+        logger.info("\tFor this Python version: %s", self.reqs["python"])
+        logger.info("\tUnparsed markers: %s", self.reqs["unparsed"])
         logger.info(
             "\tOthers listed but not required (e.g., wrong platform): %s",
-            self.reqs['other']
+            self.reqs["other"],
         )
 
-        self._status['should_load'] = len(self.reqs['base']) \
-            + len(self.reqs['os']) \
-            + len(self.reqs['python']) \
-            + len(self.reqs['unparsed'])
+        self._status["should_load"] = (
+            len(self.reqs["base"])
+            + len(self.reqs["os"])
+            + len(self.reqs["python"])
+            + len(self.reqs["unparsed"])
+        )
 
-        self._status['state'] = ConfigRep.STATE_LOAD
+        self._status["state"] = ConfigRep.STATE_LOAD
 
-        return self._status['should_load'] > 0
+        return self._status["should_load"] > 0
 
     def install_packages(self):
         """Install all needed packages from the config file."""
-        if self._status['state'] != ConfigRep.STATE_LOAD:
+        if self._status["state"] != ConfigRep.STATE_LOAD:
             self.load_config()
 
-        for package in self.reqs['os'] \
-                + self.reqs['python'] \
-                + self.reqs['base'] \
-                + self.reqs['unparsed']:
+        for package in (
+            self.reqs["os"]
+            + self.reqs["python"]
+            + self.reqs["base"]
+            + self.reqs["unparsed"]
+        ):
             logger.info("Installing package: %s", package)
             if ConfigRep.install_package(package):
-                self._status['did_load'] += 1
+                self._status["did_load"] += 1
 
-        self._status['state'] = ConfigRep.STATE_INSTALLED
+        self._status["state"] = ConfigRep.STATE_INSTALLED
 
-        return self._status['did_load'] == self._status['should_load']
+        return self._status["did_load"] == self._status["should_load"]
 
     def get_required(self):
         """Return required packages based on configuration."""
-        if self._status['state'] != ConfigRep.STATE_LOAD \
-                and self._status['state'] != ConfigRep.STATE_INSTALLED:
+        if (
+            self._status["state"] != ConfigRep.STATE_LOAD
+            and self._status["state"] != ConfigRep.STATE_INSTALLED
+        ):
             self.load_config()
 
-        return self.reqs['base'] \
-            + self.reqs['os'] \
-            + self.reqs['python'] \
-            + self.reqs['unparsed']
+        return (
+            self.reqs["base"]
+            + self.reqs["os"]
+            + self.reqs["python"]
+            + self.reqs["unparsed"]
+        )
 
     def get_config_attr(self, key, element=0):
         """Return value associated with a key in the configuration.
@@ -452,14 +465,13 @@ class ConfigRep():
             it is not present.
 
         """
-        if self._status['state'] != ConfigRep.STATE_LOAD \
-                and self._status['state'] != ConfigRep.STATE_INSTALLED:
+        if (
+            self._status["state"] != ConfigRep.STATE_LOAD
+            and self._status["state"] != ConfigRep.STATE_INSTALLED
+        ):
             self.load_config()
 
-        return self.config.get(
-            key,
-            self.config['metadata'].get(key, [None])
-        )[element]
+        return self.config.get(key, self.config["metadata"].get(key, [None]))[element]
 
     def get_config_list(self, key):
         """Return a list associated with a key in the configuration.
@@ -477,8 +489,10 @@ class ConfigRep():
             it is not present.
 
         """
-        if self._status['state'] != ConfigRep.STATE_LOAD \
-                and self._status['state'] != ConfigRep.STATE_INSTALLED:
+        if (
+            self._status["state"] != ConfigRep.STATE_LOAD
+            and self._status["state"] != ConfigRep.STATE_INSTALLED
+        ):
             self.load_config()
 
-        return self.config.get(key, self.config['metadata'].get(key, [None]))
+        return self.config.get(key, self.config["metadata"].get(key, [None]))
