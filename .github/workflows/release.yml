@@ -43,8 +43,8 @@ jobs:
       - run: |
           pip install -r $GITHUB_WORKSPACE/requirements/release.txt
           newver=$(bumpversion --dry-run --list patch | grep new_version= | sed -r s,"^.*=",,)
-          echo "::set-env name=NEW_VERSION::$newver"
-          echo "New version will be ${{ env.NEW_VERSION }}"
+          echo "NEW_VERSION=${newver}" >> $GITHUB_ENV
+          echo "New version will be ${newver}"
           bumpversion patch
       - name: Create Pull Request
         id: cpr
