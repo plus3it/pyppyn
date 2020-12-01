@@ -21,9 +21,7 @@ cache: pip
 before_cache:
   - rm -f $HOME/.cache/pip/log/debug.log
 install:
-  - python -m pip install -r requirements/pip.txt
   - python -m pip install -r requirements/test.txt
-  - python -m pip install -r requirements/install.txt
   - python -m pip install --editable .
 script:
   - pytest
@@ -32,7 +30,6 @@ jobs:
     - stage: lint
       python: 3.7
       install:
-        - python -m pip install -r requirements/pip.txt
         - python -m pip install -r requirements/lint.txt
         - python -m pip install --editable .
       script:

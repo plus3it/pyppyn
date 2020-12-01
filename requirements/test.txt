@@ -1,1 +1,3 @@
-pytest==6.1.2
+-r ./pip.txt
+-r ./pytest.txt
+-r ./install.txt
