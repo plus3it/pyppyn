@@ -16,7 +16,7 @@ env:
     - RELEASE_VERSION=$(grep -E '^current_version' $TRAVIS_BUILD_DIR/.bumpversion.cfg | sed 's/^.*= //')
     - PRIOR_VERSION=$(git describe --abbrev=0 --tags)
 
-if: branch = master OR type = pull_request
+if: branch = master OR type = pull_request OR tag is present
 cache: pip
 before_cache:
   - rm -f $HOME/.cache/pip/log/debug.log
