@@ -30,10 +30,20 @@ jobs:
   - script: |
       call $(venvDirectory)/Scripts/activate.bat
       python -m pip list
-      python -m pip install -r requirements/pip.txt
+    displayName: pip list before
+  - script: |
+      call $(venvDirectory)/Scripts/activate.bat
       python -m pip install -r requirements/test.txt
-      python -m pip install -r requirements/install.txt
+    displayName: install requirements/test.txt
+  - script: |
+      call $(venvDirectory)/Scripts/activate.bat
       python -m pip install --editable .
+    displayName: install gravitybee
+  - script: |
+      call $(venvDirectory)/Scripts/activate.bat
       python -m pip list
+    displayName: pip list after
+  - script: |
+      call $(venvDirectory)/Scripts/activate.bat
       pytest
-    displayName: run pytest
+    displayName: pytest
