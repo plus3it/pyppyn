@@ -22,8 +22,9 @@ Example:
 
         $ pyppyn --help
 """
+
 from __future__ import (
-    absolute_import,
+    absolute_import,  # __init__.py pylint: disable=duplicate-code
     division,
     print_function,
     unicode_literals,

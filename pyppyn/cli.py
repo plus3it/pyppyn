@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 """pyppyn cli."""
+
 from __future__ import (
-    absolute_import,
+    absolute_import,  # cli.py pylint: disable=duplicate-code
     division,
     print_function,
     unicode_literals,
