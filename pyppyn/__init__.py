@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """Pyppyn module.
 
 This module helps give programmatic access to the setup configuration
@@ -23,7 +24,7 @@ Example:
 """
 
 from __future__ import (
-    absolute_import,
+    absolute_import,  # __init__.py pylint: disable=duplicate-code
     division,
     print_function,
     unicode_literals,
