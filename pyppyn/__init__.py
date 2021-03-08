@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Pyppyn module.
 
 This module helps give programmatic access to the setup configuration
@@ -22,6 +21,7 @@ Example:
 
         $ pyppyn --help
 """
+
 from __future__ import (
     absolute_import,
     division,
