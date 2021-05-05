@@ -220,26 +220,26 @@ class ConfigRep:
     def _wheel_console_scripts(self):
         # console scripts
         logger.info("Reading names of console scripts")
-        ep_file = open("entry_points.txt", "r")
         self.config["console_scripts"] = []
         console_scripts = False
-        for line in ep_file:
-            if line.startswith("[console_scripts]"):
-                console_scripts = True
-            elif console_scripts:
-                parts = line.split(" = ")
-                if len(parts) > 1:
-                    self.config["console_scripts"].append(parts[0].strip())
+        with open("entry_points.txt", "r") as ep_file:
+            for line in ep_file:
+                if line.startswith("[console_scripts]"):
+                    console_scripts = True
+                elif console_scripts:
+                    parts = line.split(" = ")
+                    if len(parts) > 1:
+                        self.config["console_scripts"].append(parts[0].strip())
 
     def _wheel_metadata(self):
         # metadata
         logger.info("Reading wheel metadata")
-        bulk = open("METADATA", "r").read()
-        parts = bulk.split("\n\n")
-        if len(parts) > 1:
-            metadata = parts[0].strip()
-        else:
-            metadata = bulk
+        with open("METADATA", "r").read() as bulk:
+            parts = bulk.split("\n\n")
+            if len(parts) > 1:
+                metadata = parts[0].strip()
+            else:
+                metadata = bulk
 
         self.config["metadata"] = {}
         for line in metadata.split("\n"):
