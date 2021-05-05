@@ -234,12 +234,15 @@ class ConfigRep:
     def _wheel_metadata(self):
         # metadata
         logger.info("Reading wheel metadata")
-        with open("METADATA", "r").read() as bulk:
-            parts = bulk.split("\n\n")
-            if len(parts) > 1:
-                metadata = parts[0].strip()
-            else:
-                metadata = bulk
+        bulk = ""
+        with open("METADATA", "r") as metadata_fh:
+            bulk = metadata_fh.read()
+
+        parts = bulk.split("\n\n")
+        if len(parts) > 1:
+            metadata = parts[0].strip()
+        else:
+            metadata = bulk
 
         self.config["metadata"] = {}
         for line in metadata.split("\n"):
