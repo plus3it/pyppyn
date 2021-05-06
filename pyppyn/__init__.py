@@ -195,9 +195,8 @@ class ConfigRep:
 
         if wheel_file is not None:
             logger.info("Unzipping: %s", wheel_file)
-            zip_ref = zipfile.ZipFile(wheel_file, "r")
-            zip_ref.extractall(ConfigRep.WHEEL_TEMP_DIR)
-            zip_ref.close()
+            with zipfile.ZipFile(wheel_file, "r") as zip_ref:
+                zip_ref.extractall(ConfigRep.WHEEL_TEMP_DIR)
 
     def _wheel_directories(self):
         # look at directories wheel created
