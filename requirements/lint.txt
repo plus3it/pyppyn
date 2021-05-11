@@ -4,4 +4,4 @@
 
 flake8==3.9.2
 pylint==2.8.2
-black==21.5b0
+black==21.5b1
