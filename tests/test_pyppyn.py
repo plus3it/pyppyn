@@ -77,16 +77,29 @@ def test_get_required(configrep):
             ["backoff", "click", "six", "pyyaml"]
         )
 
+
 def test_get_required_including_extras(configrep):
-    """Test getting list of requirements, including extra packages (tagged with "test", "check", "docs")."""
+    """Test getting list of requirements, including extra packages
+       (such as those marked with "test", "check", "docs")."""
     if platform.system().lower() == "windows":
         assert set(configrep.get_required(include_extra_require=True)) == set(
-            ["backoff", "click", "pyyaml", "defusedxml", "pypiwin32", "six", "pytest", "flake8", "sphinx"]
+            [
+                "backoff",
+                "click",
+                "pyyaml",
+                "defusedxml",
+                "pypiwin32",
+                "six",
+                "pytest",
+                "flake8",
+                "sphinx",
+            ]
         )
     else:
         assert set(configrep.get_required(include_extra_require=True)) == set(
             ["backoff", "click", "six", "pyyaml", "pytest", "flake8", "sphinx"]
         )
+
 
 def test_install_package():
     """Test the class method."""

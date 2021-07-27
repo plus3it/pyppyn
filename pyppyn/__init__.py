@@ -145,7 +145,14 @@ class ConfigRep:
         self.python_version = sys.version_info[0] + (sys.version_info[1] / 10)
 
         # requirements
-        self.reqs = {"os": [], "other": [], "base": [], "python": [], "unparsed": [], "extra": []}
+        self.reqs = {
+            "os": [],
+            "other": [],
+            "base": [],
+            "python": [],
+            "unparsed": [],
+            "extra": [],
+        }
 
         # suffix for renaming build/dist directories
         self._rename_end = None
