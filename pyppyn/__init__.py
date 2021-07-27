@@ -145,7 +145,7 @@ class ConfigRep:
         self.python_version = sys.version_info[0] + (sys.version_info[1] / 10)
 
         # requirements
-        self.reqs = {"os": [], "other": [], "base": [], "python": [], "unparsed": []}
+        self.reqs = {"os": [], "other": [], "base": [], "python": [], "unparsed": [], "extra": []}
 
         # suffix for renaming build/dist directories
         self._rename_end = None
@@ -361,6 +361,8 @@ class ConfigRep:
             ):
                 self.reqs["python"].append(package)
 
+        elif marker_parts[0] == "extra":
+            self.reqs["extra"].append(package)
         else:
             self.reqs["unparsed"].append(package)
 
@@ -433,20 +435,30 @@ class ConfigRep:
 
         return self._status["did_load"] == self._status["should_load"]
 
-    def get_required(self):
-        """Return required packages based on configuration."""
+    def get_required(self, include_extra_require=False):
+        """Return required packages based on configuration.
+
+        Args:
+            include_extra_require: Boolean. If True, include
+                packages tagged as "extra" in return.
+        """
         if (
             self._status["state"] != ConfigRep.STATE_LOAD
             and self._status["state"] != ConfigRep.STATE_INSTALLED
         ):
             self.load_config()
 
-        return (
+        required = (
             self.reqs["base"]
             + self.reqs["os"]
             + self.reqs["python"]
             + self.reqs["unparsed"]
         )
+
+        if include_extra_require:
+            required = required + self.reqs["extra"]
+
+        return required
 
     def get_config_attr(self, key, element=0):
         """Return value associated with a key in the configuration.
