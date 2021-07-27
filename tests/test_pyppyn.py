@@ -78,7 +78,7 @@ def test_get_required(configrep):
         )
 
 
-def test_get_required_including_extras(configrep):
+def test_get_required_with_extras(configrep):
     """Test getting list of requirements, including extra packages
        (such as those marked with "test", "check", "docs")."""
     if platform.system().lower() == "windows":
