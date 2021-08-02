@@ -82,7 +82,7 @@ def test_get_required_with_extras(configrep):
     """Test getting list of requirements, including extra packages
     (such as those marked with "test", "check", "docs")."""
     if platform.system().lower() == "windows":
-        assert set(configrep.get_required(include_extra_require=True)) == set(
+        assert set(configrep.get_required(include_extras_require=True)) == set(
             [
                 "backoff",
                 "click",
@@ -96,7 +96,7 @@ def test_get_required_with_extras(configrep):
             ]
         )
     else:
-        assert set(configrep.get_required(include_extra_require=True)) == set(
+        assert set(configrep.get_required(include_extras_require=True)) == set(
             ["backoff", "click", "six", "pyyaml", "pytest", "flake8", "sphinx"]
         )
 

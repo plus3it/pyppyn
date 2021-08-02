@@ -98,7 +98,7 @@ This is a sample usage of Pyppyn from a Python script.
     # Load config, install dependencies and import a module from the package
     p.process_config()
 
-    print("Package requires:", p.get_required())
+    print("Package requires:", p.get_required(include_extras_require=False))
 
 Contribute
 ==========
