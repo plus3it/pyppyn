@@ -67,22 +67,10 @@ def test_process_config(configrep):
 
 
 def test_get_required(configrep):
-    """Test getting list of requirements."""
-    if platform.system().lower() == "windows":
-        assert set(configrep.get_required()) == set(
-            ["backoff", "click", "pyyaml", "defusedxml", "pypiwin32", "six"]
-        )
-    else:
-        assert set(configrep.get_required()) == set(
-            ["backoff", "click", "six", "pyyaml"]
-        )
-
-
-def test_get_required_with_extras(configrep):
     """Test getting list of requirements, including extra packages
     (such as those marked with "test", "check", "docs")."""
     if platform.system().lower() == "windows":
-        assert set(configrep.get_required(include_extras_require=True)) == set(
+        assert set(configrep.get_required()) == set(
             [
                 "backoff",
                 "click",
@@ -96,8 +84,20 @@ def test_get_required_with_extras(configrep):
             ]
         )
     else:
-        assert set(configrep.get_required(include_extras_require=True)) == set(
+        assert set(configrep.get_required()) == set(
             ["backoff", "click", "six", "pyyaml", "pytest", "flake8", "sphinx"]
+        )
+
+
+def test_get_required_no_extras(configrep):
+    """Test getting list of requirements."""
+    if platform.system().lower() == "windows":
+        assert set(configrep.get_required(include_extras_require=False)) == set(
+            ["backoff", "click", "pyyaml", "defusedxml", "pypiwin32", "six"]
+        )
+    else:
+        assert set(configrep.get_required(include_extras_require=False)) == set(
+            ["backoff", "click", "six", "pyyaml"]
         )
 
 

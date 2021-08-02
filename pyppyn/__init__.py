@@ -442,11 +442,11 @@ class ConfigRep:
 
         return self._status["did_load"] == self._status["should_load"]
 
-    def get_required(self, include_extras_require=False):
+    def get_required(self, include_extras_require=True):
         """Return required packages based on configuration.
 
         Args:
-            include_extras_require: Boolean. If True, include
+            include_extras_require: Boolean. If False, skip
                 packages tagged as "extra" in return.
         """
         if (
