@@ -1,6 +1,11 @@
 CHANGE LOG
 ==========
 
+0.4.0 - 2021.08.02
+-------------------
+* [FEATURE] Add option to include/exclude extras_require from required packages,
+  using `get_required(include_extras_require=False)`.
+
 0.3.17 - 2020.02.27
 -------------------
 * [FIX] Remove standard packages from setup.cfg install requires.
