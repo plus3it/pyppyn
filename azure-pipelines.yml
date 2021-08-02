@@ -38,7 +38,7 @@ jobs:
   - script: |
       call $(venvDirectory)/Scripts/activate.bat
       python -m pip install --editable .
-    displayName: install gravitybee
+    displayName: install pyppyn
   - script: |
       call $(venvDirectory)/Scripts/activate.bat
       python -m pip list
