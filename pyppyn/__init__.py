@@ -221,7 +221,8 @@ class ConfigRep:
     def _wheel_top_level(self):
         # top level
         logger.info("Looking at wheel top level")
-        self.config["top_level"] = open("top_level.txt", "r").read().strip()
+        with open("top_level.txt", "r") as top:
+            self.config["top_level"] = top.read().strip()
 
     def _wheel_console_scripts(self):
         # console scripts
