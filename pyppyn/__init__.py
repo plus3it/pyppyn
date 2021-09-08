@@ -221,7 +221,7 @@ class ConfigRep:
     def _wheel_top_level(self):
         # top level
         logger.info("Looking at wheel top level")
-        with open("top_level.txt", "r") as top:
+        with open("top_level.txt", "r", encoding="utf8") as top:
             self.config["top_level"] = top.read().strip()
 
     def _wheel_console_scripts(self):
@@ -229,7 +229,7 @@ class ConfigRep:
         logger.info("Reading names of console scripts")
         self.config["console_scripts"] = []
         console_scripts = False
-        with open("entry_points.txt", "r") as ep_file:
+        with open("entry_points.txt", "r", encoding="utf8") as ep_file:
             for line in ep_file:
                 if line.startswith("[console_scripts]"):
                     console_scripts = True
@@ -242,7 +242,7 @@ class ConfigRep:
         # metadata
         logger.info("Reading wheel metadata")
         bulk = ""
-        with open("METADATA", "r") as metadata_fh:
+        with open("METADATA", "r", encoding="utf8") as metadata_fh:
             bulk = metadata_fh.read()
 
         parts = bulk.split("\n\n")
