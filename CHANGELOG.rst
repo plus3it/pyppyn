@@ -1,6 +1,10 @@
 CHANGE LOG
 ==========
 
+0.5.0 - 2022.04.21
+-------------------
+* [DEPRECATION] Deprecates Python 3.6 support.
+
 0.4.0 - 2021.08.02
 -------------------
 * [FEATURE] Add option to include/exclude extras_require from required packages,
