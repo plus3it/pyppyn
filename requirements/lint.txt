@@ -3,5 +3,5 @@
 -r ./install.txt
 
 flake8==4.0.1
-pylint==2.14.1
+pylint==2.14.2
 black==22.3.0
