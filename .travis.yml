@@ -66,7 +66,7 @@ jobs:
           username: plus3it
           password:
             secure: Ms9MADWwUuFpiHv2ee2cyEu04k7NLGgiywcGWVEFMOZdfE8BW6xD9oBMyISY7mkqO1Z5o7qyLbPuFNqhJVXnIX5IuqDiMvd0SViR9AmvErhanM68Iarwz5zT6gQt5V3QEeIdgTIyVCcR5jikUyhhE/HUsXeyD2RKk+pVk8wWbfaPXquho03ztNh1PnE7s2W2mex5oTxYA8IFMY8xBtGMdXkPusrZmaBN3GU8RUoATsI1tvyPN6ydMjXDCzCCWNlMdMn8i6FmsJo7m6G8y+E3CNBIj3qUbe2ZwNO89unuvuwRJ3Deah45dvT6MkqQgJ74l6IAzv6PtQGBrcC1xTsNohUfgTViJTday4zc26e1I0Cm9r4C1Ba6eMTioYFoKxL/F8cGLalh1o1+G9wZfbuWnVSMkFpdD8LHIR1Ssd3dINc9+ELZUTRehLzjqBEecienunNTckBhARoAMzfwWGSJG35qGF6UjnJMm1s1O+oOLarKTde2ydD9KRVosw05Kq5IlHAoVVxXJwv33K0+JTDKjgTfIIGz0H8gdsxoufSTDwRIk+PEwftlkU8e5hnwnmPFkRI8w4lHwTVt5SVxpPpwBjbUpPXA5w7YYSV6MPQFTlOJlEGDlCrCHCthwWft6pKA7iNBoLuavYrW7FvTKXlrFxidFJWQ0EpGx1abZpNUCfo=
-          cleanup: false
+          skip_cleanup: true
           upload_docs: false
           on:
             branch: master
