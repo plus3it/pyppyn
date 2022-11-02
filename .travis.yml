@@ -12,6 +12,9 @@ python:
   - "3.10"
   - "pypy3.7-7.3.5"
 
+git:
+  depth: false
+
 env:
   global:
     - THIS_REPO="${TRAVIS_REPO_SLUG#*/}"
@@ -47,7 +50,15 @@ jobs:
         - JOB="Deploy to Test PyPI"
       install: skip
       script:
-        - sed -i -E "s/^(__version__ = \")(.*)\"/\1\2.$TRAVIS_BUILD_NUMBER\"/" $TRAVIS_BUILD_DIR/$THIS_REPO/__init__.py
+        - |
+          if [[ "$TRAVIS_BRANCH" = "master" && "$PRIOR_VERSION" = "$RELEASE_VERSION" ]]; then
+            # not a release, so need to set the dev version for test pypi
+            # whether setup.cfg version has "dev" or not, it is added but not duplicated
+            ver=$(git show -s --format=%cd --date=format:'%Y%m%d%H%M%S')
+            sed -i -E "s/^(version = )([0-9]+\.[0-9]+\.[0-9]+).*$/\1\2.dev$ver/" setup.cfg
+            sed -i -E "s/^(__version__ = )\"([0-9]+\.[0-9]+\.[0-9]+)\".*$/\1\"\2.dev$ver\"/" pyppyn/__init__.py
+          fi
+        - grep "version = " setup.cfg
       deploy:
         - provider: pypi
           server: https://test.pypi.org/legacy/
@@ -55,7 +66,7 @@ jobs:
           username: plus3it
           password:
             secure: Ms9MADWwUuFpiHv2ee2cyEu04k7NLGgiywcGWVEFMOZdfE8BW6xD9oBMyISY7mkqO1Z5o7qyLbPuFNqhJVXnIX5IuqDiMvd0SViR9AmvErhanM68Iarwz5zT6gQt5V3QEeIdgTIyVCcR5jikUyhhE/HUsXeyD2RKk+pVk8wWbfaPXquho03ztNh1PnE7s2W2mex5oTxYA8IFMY8xBtGMdXkPusrZmaBN3GU8RUoATsI1tvyPN6ydMjXDCzCCWNlMdMn8i6FmsJo7m6G8y+E3CNBIj3qUbe2ZwNO89unuvuwRJ3Deah45dvT6MkqQgJ74l6IAzv6PtQGBrcC1xTsNohUfgTViJTday4zc26e1I0Cm9r4C1Ba6eMTioYFoKxL/F8cGLalh1o1+G9wZfbuWnVSMkFpdD8LHIR1Ssd3dINc9+ELZUTRehLzjqBEecienunNTckBhARoAMzfwWGSJG35qGF6UjnJMm1s1O+oOLarKTde2ydD9KRVosw05Kq5IlHAoVVxXJwv33K0+JTDKjgTfIIGz0H8gdsxoufSTDwRIk+PEwftlkU8e5hnwnmPFkRI8w4lHwTVt5SVxpPpwBjbUpPXA5w7YYSV6MPQFTlOJlEGDlCrCHCthwWft6pKA7iNBoLuavYrW7FvTKXlrFxidFJWQ0EpGx1abZpNUCfo=
-          cleanup: false
+          skip_cleanup: true
           upload_docs: false
           on:
             branch: master
