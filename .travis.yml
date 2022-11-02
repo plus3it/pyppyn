@@ -55,10 +55,9 @@ jobs:
             # not a release, so need to set the dev version for test pypi
             # whether setup.cfg version has "dev" or not, it is added but not duplicated
             ver=$(git show -s --format=%cd --date=format:'%Y%m%d%H%M%S')
-            sed -i -E "s/^(version = )([0-9]+\.[0-9]+\.[0-9]+).*$/\1\2.dev$ver/" setup.cfg
             sed -i -E "s/^(__version__ = )\"([0-9]+\.[0-9]+\.[0-9]+)\".*$/\1\"\2.dev$ver\"/" pyppyn/__init__.py
           fi
-        - grep "version = " setup.cfg
+        - grep "__version__ = " pyppyn/__init__.py
       deploy:
         - provider: pypi
           server: https://test.pypi.org/legacy/
