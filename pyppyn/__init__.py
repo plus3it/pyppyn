@@ -43,7 +43,7 @@ import sys
 import uuid
 import zipfile
 
-__version__ = "0.5.0"
+__version__ = "0.5.1"
 
 __EXITOKAY__ = 0
 FILE_DIR = ".pyppyn"
